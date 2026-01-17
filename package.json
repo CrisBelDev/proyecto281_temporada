@@ -1,0 +1,12 @@
+{
+  "name": "proyecto_281_colab",
+  "version": "1.0.0",
+  "description": "proyecto de temporada 2026",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
