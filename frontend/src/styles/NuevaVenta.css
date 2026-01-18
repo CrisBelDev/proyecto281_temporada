@@ -1,0 +1,170 @@
+.nueva-venta-page {
+	max-width: 1400px;
+}
+
+.venta-container {
+	display: grid;
+	grid-template-columns: 2fr 1fr;
+	gap: 2rem;
+}
+
+.productos-seleccion {
+	background: white;
+	border-radius: 1rem;
+	padding: 1.5rem;
+	box-shadow: var(--shadow);
+}
+
+.productos-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: 1rem;
+	margin-top: 1rem;
+	max-height: calc(100vh - 300px);
+	overflow-y: auto;
+}
+
+.producto-card {
+	background: var(--bg-color);
+	border: 2px solid var(--border-color);
+	border-radius: 0.5rem;
+	padding: 1rem;
+	cursor: pointer;
+	transition: all 0.2s;
+}
+
+.producto-card:hover {
+	border-color: var(--primary-color);
+	transform: translateY(-2px);
+}
+
+.producto-card h4 {
+	margin-bottom: 0.5rem;
+	color: var(--text-color);
+}
+
+.producto-codigo {
+	font-size: 0.875rem;
+	color: var(--secondary-color);
+	margin-bottom: 0.25rem;
+}
+
+.producto-precio {
+	font-size: 1.25rem;
+	font-weight: bold;
+	color: var(--primary-color);
+	margin-bottom: 0.25rem;
+}
+
+.producto-stock {
+	font-size: 0.875rem;
+	color: var(--secondary-color);
+}
+
+.carrito-venta {
+	background: white;
+	border-radius: 1rem;
+	padding: 1.5rem;
+	box-shadow: var(--shadow);
+	position: sticky;
+	top: 2rem;
+	max-height: calc(100vh - 4rem);
+	overflow-y: auto;
+}
+
+.carrito-vacio {
+	text-align: center;
+	color: var(--secondary-color);
+	padding: 2rem 1rem;
+}
+
+.carrito-items {
+	margin-bottom: 1.5rem;
+}
+
+.carrito-item {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	padding: 1rem;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.item-info {
+	flex: 1;
+}
+
+.item-info strong {
+	display: block;
+	margin-bottom: 0.25rem;
+}
+
+.item-cantidad {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.item-cantidad button {
+	background: var(--primary-color);
+	color: white;
+	border: none;
+	border-radius: 0.25rem;
+	width: 2rem;
+	height: 2rem;
+	cursor: pointer;
+	font-size: 1.25rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.item-cantidad input {
+	width: 4rem;
+	text-align: center;
+	padding: 0.25rem;
+	border: 1px solid var(--border-color);
+	border-radius: 0.25rem;
+}
+
+.item-subtotal {
+	font-weight: bold;
+	color: var(--primary-color);
+	min-width: 6rem;
+	text-align: right;
+}
+
+.btn-eliminar {
+	background: none;
+	border: none;
+	font-size: 1.25rem;
+	cursor: pointer;
+}
+
+.venta-form {
+	margin-top: 1rem;
+}
+
+.venta-totales {
+	background: var(--bg-color);
+	padding: 1rem;
+	border-radius: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+.total-row {
+	display: flex;
+	justify-content: space-between;
+	padding: 0.5rem 0;
+}
+
+.total-final {
+	border-top: 2px solid var(--border-color);
+	margin-top: 0.5rem;
+	padding-top: 1rem;
+	font-size: 1.25rem;
+}
+
+.total-final strong {
+	color: var(--primary-color);
+}

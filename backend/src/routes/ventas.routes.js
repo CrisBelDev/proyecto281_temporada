@@ -1,0 +1,16 @@
+const express = require("express");
+const router = express.Router();
+const ventaController = require("../controllers/venta.controller");
+const verificarToken = require("../middlewares/auth.middleware");
+const verificarRol = require("../middlewares/roles.middleware");
+
+// Todas las rutas requieren autenticación
+router.use(verificarToken);
+
+// Rutas de ventas
+router.get("/", ventaController.obtenerVentas);
+router.get("/:id", ventaController.obtenerVentaPorId);
+router.post("/", verificarRol("ADMIN", "VENDEDOR"), ventaController.crearVenta);
+router.patch("/:id/anular", verificarRol("ADMIN"), ventaController.anularVenta);
+
+module.exports = router;

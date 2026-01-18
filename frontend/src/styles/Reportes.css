@@ -1,0 +1,56 @@
+.reportes-page {
+	max-width: 1400px;
+}
+
+.tabs {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 2rem;
+	border-bottom: 2px solid var(--border-color);
+}
+
+.tab {
+	padding: 1rem 2rem;
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 500;
+	color: var(--secondary-color);
+	transition: all 0.2s;
+	margin-bottom: -2px;
+}
+
+.tab:hover {
+	color: var(--primary-color);
+}
+
+.tab.active {
+	color: var(--primary-color);
+	border-bottom-color: var(--primary-color);
+}
+
+.tab-content {
+	background: white;
+	border-radius: 1rem;
+	padding: 2rem;
+	box-shadow: var(--shadow);
+}
+
+.reporte-section h2 {
+	margin-bottom: 1.5rem;
+	color: var(--text-color);
+}
+
+.filtros {
+	display: flex;
+	gap: 1rem;
+	align-items: flex-end;
+	margin: 1.5rem 0;
+}
+
+.filtros .form-group {
+	flex: 1;
+	margin-bottom: 0;
+}
