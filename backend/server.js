@@ -35,7 +35,8 @@ const iniciarServidor = async () => {
 
 		// Sincronizar modelos con la base de datos
 		// En producción, usar migraciones en lugar de sync
-		await sequelize.sync({ alter: true });
+		// Cambiar alter: true a false para evitar modificaciones automáticas
+		await sequelize.sync({ alter: false });
 		console.log("✓ Modelos sincronizados con la base de datos");
 
 		// Inicializar roles

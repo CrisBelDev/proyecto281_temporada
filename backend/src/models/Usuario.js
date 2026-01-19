@@ -48,6 +48,26 @@ const Usuario = sequelize.define(
 			type: DataTypes.BOOLEAN,
 			defaultValue: true,
 		},
+		email_verificado: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false,
+		},
+		token_verificacion: {
+			type: DataTypes.STRING(255),
+			allowNull: true,
+		},
+		token_verificacion_expira: {
+			type: DataTypes.DATE,
+			allowNull: true,
+		},
+		token_recuperacion: {
+			type: DataTypes.STRING(255),
+			allowNull: true,
+		},
+		token_recuperacion_expira: {
+			type: DataTypes.DATE,
+			allowNull: true,
+		},
 	},
 	{
 		tableName: "usuarios",
