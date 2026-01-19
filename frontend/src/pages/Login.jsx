@@ -50,7 +50,21 @@ function Login() {
 				<form onSubmit={handleSubmit} className="auth-form">
 					<h3>Iniciar Sesión</h3>
 
-					{error && <div className="alert alert-error">{error}</div>}
+					{error && (
+						<div className="alert alert-error">
+							{error}
+							{error.includes("verifica tu email") && (
+								<div style={{ marginTop: "0.5rem" }}>
+									<Link
+										to="/reenviar-verificacion"
+										style={{ color: "inherit", textDecoration: "underline" }}
+									>
+										Reenviar email de verificación
+									</Link>
+								</div>
+							)}
+						</div>
+					)}
 
 					<div className="form-group">
 						<label htmlFor="email">Email</label>
@@ -75,6 +89,18 @@ function Login() {
 							onChange={handleChange}
 							required
 						/>
+						<div style={{ textAlign: "right", marginTop: "0.5rem" }}>
+							<Link
+								to="/olvide-password"
+								style={{
+									fontSize: "0.9rem",
+									color: "var(--primary-color)",
+									textDecoration: "none",
+								}}
+							>
+								¿Olvidaste tu contraseña?
+							</Link>
+						</div>
 					</div>
 
 					<button type="submit" className="btn btn-primary" disabled={loading}>

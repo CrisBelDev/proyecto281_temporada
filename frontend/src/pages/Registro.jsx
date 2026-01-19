@@ -19,6 +19,7 @@ function Registro() {
 	});
 	const [error, setError] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [registroExitoso, setRegistroExitoso] = useState(false);
 
 	const handleChange = (e) => {
 		setFormData({
@@ -35,8 +36,7 @@ function Registro() {
 		try {
 			const response = await authService.registrarEmpresa(formData);
 			if (response.success) {
-				alert("Empresa registrada exitosamente. Ahora puedes iniciar sesión.");
-				navigate("/login");
+				setRegistroExitoso(true);
 			} else {
 				setError(response.mensaje || "Error al registrar empresa");
 			}
@@ -46,6 +46,35 @@ function Registro() {
 			setLoading(false);
 		}
 	};
+
+	if (registroExitoso) {
+		return (
+			<div className="auth-container">
+				<div className="auth-card">
+					<div className="verification-status success">
+						<div className="icon-success">✓</div>
+						<h2>¡Registro exitoso!</h2>
+						<p className="success-message">
+							Tu empresa ha sido registrada correctamente.
+						</p>
+						<p className="info-text">
+							Hemos enviado un email de verificación a tu correo electrónico.
+							Por favor revisa tu bandeja de entrada y sigue las instrucciones
+							para activar tu cuenta.
+						</p>
+						<div className="verification-actions">
+							<Link to="/login" className="btn btn-primary">
+								Ir al inicio de sesión
+							</Link>
+							<Link to="/reenviar-verificacion" className="btn-link">
+								¿No recibiste el email? Reenviar
+							</Link>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
 
 	return (
 		<div className="auth-container">

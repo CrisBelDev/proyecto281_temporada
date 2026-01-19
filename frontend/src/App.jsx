@@ -11,6 +11,10 @@ import Layout from "./components/Layout";
 // Páginas
 import Login from "./pages/Login";
 import Registro from "./pages/Registro";
+import VerificarEmail from "./pages/VerificarEmail";
+import ReenviarVerificacion from "./pages/ReenviarVerificacion";
+import OlvidePassword from "./pages/OlvidePassword";
+import ResetearPassword from "./pages/ResetearPassword";
 import Dashboard from "./pages/Dashboard";
 import Productos from "./pages/Productos";
 import Ventas from "./pages/Ventas";
@@ -28,7 +32,16 @@ function App() {
 					{/* Rutas públicas */}
 					<Route path="/login" element={<Login />} />
 					<Route path="/registro" element={<Registro />} />
-
+					<Route path="/verificar-email/:token" element={<VerificarEmail />} />
+					<Route
+						path="/reenviar-verificacion"
+						element={<ReenviarVerificacion />}
+					/>{" "}
+					<Route path="/olvide-password" element={<OlvidePassword />} />
+					<Route
+						path="/resetear-password/:token"
+						element={<ResetearPassword />}
+					/>
 					{/* Rutas privadas */}
 					<Route
 						path="/"
@@ -48,7 +61,6 @@ function App() {
 						<Route path="usuarios" element={<Usuarios />} />
 						<Route path="reportes" element={<Reportes />} />
 					</Route>
-
 					{/* Ruta 404 */}
 					<Route path="*" element={<Navigate to="/dashboard" replace />} />
 				</Routes>
