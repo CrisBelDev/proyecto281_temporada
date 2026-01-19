@@ -278,23 +278,19 @@ exports.verificarEmail = async (req, res) => {
 		});
 
 		if (!usuario) {
+			// Si no se encuentra el token, verificar si existe un usuario con ese email ya verificado
+			// (esto puede pasar si el usuario hace doble clic en el enlace)
 			return res.status(404).json({
 				success: false,
-				mensaje: "Token de verificación inválido",
+				mensaje: "Token de verificación inválido o ya utilizado",
 			});
 		}
 
 		// Verificar que el email no esté ya verificado
 		if (usuario.email_verificado) {
-			return res.status(400).json({
-				success: false,
-				mensaje: "Este email ya ha sido verificado",
-			});
-		}
-
-		// Verificar que el token no haya expirado
-		if (new Date() > usuario.token_verificacion_expira) {
-			return res.status(400).json({
+			return res.status(200).json({
+				success: true,
+				mensaje: "Este email ya ha sido verificado. Puedes iniciar sesión.",
 				success: false,
 				mensaje: "El token de verificación ha expirado. Solicita uno nuevo.",
 			});

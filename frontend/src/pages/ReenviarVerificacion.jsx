@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import "../styles/Auth.css";
 
 const ReenviarVerificacion = () => {
@@ -17,10 +17,7 @@ const ReenviarVerificacion = () => {
 		setCargando(true);
 
 		try {
-			const response = await axios.post(
-				"http://localhost:3000/api/auth/reenviar-verificacion",
-				{ email },
-			);
+			const response = await api.post("/auth/reenviar-verificacion", { email });
 
 			if (response.data.success) {
 				setMensaje(response.data.mensaje);

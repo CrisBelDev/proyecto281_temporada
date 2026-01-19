@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import "../styles/Auth.css";
 
 const ResetearPassword = () => {
@@ -19,8 +19,8 @@ const ResetearPassword = () => {
 
 	const verificarToken = async () => {
 		try {
-			const response = await axios.get(
-				`http://localhost:3000/api/auth/verificar-token-recuperacion/${token}`,
+			const response = await api.get(
+				`/auth/verificar-token-recuperacion/${token}`,
 			);
 
 			if (response.data.success) {
@@ -55,13 +55,10 @@ const ResetearPassword = () => {
 		setCargando(true);
 
 		try {
-			const response = await axios.post(
-				"http://localhost:3000/api/auth/resetear-password",
-				{
-					token,
-					nuevaPassword,
-				},
-			);
+			const response = await api.post("/auth/resetear-password", {
+				token,
+				nuevaPassword,
+			});
 
 			if (response.data.success) {
 				setEstado("exito");

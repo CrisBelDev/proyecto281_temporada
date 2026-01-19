@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import "../styles/Auth.css";
 
 const VerificarEmail = () => {
@@ -8,16 +8,19 @@ const VerificarEmail = () => {
 	const [mensaje, setMensaje] = useState("");
 	const { token } = useParams();
 	const navigate = useNavigate();
+	const verificacionIniciada = useRef(false);
 
 	useEffect(() => {
-		verificarEmail();
+		// Evitar doble ejecución en React Strict Mode
+		if (!verificacionIniciada.current) {
+			verificacionIniciada.current = true;
+			verificarEmail();
+		}
 	}, [token]);
 
 	const verificarEmail = async () => {
 		try {
-			const response = await axios.get(
-				`http://localhost:3000/api/auth/verificar-email/${token}`,
-			);
+			const response = await api.get(`/auth/verificar-email/${token}`);
 
 			if (response.data.success) {
 				setEstado("exito");
@@ -29,7 +32,14 @@ const VerificarEmail = () => {
 			}
 		} catch (error) {
 			setEstado("error");
-			if (error.response?.data?.mensaje) {
+			// Si el email ya fue verificado, mostrar como éxito
+			if (error.response?.data?.mensaje?.includes("ya ha sido verificado")) {
+				setEstado("exito");
+				setMensaje("Tu cuenta ya ha sido verificada. Puedes iniciar sesión.");
+				setTimeout(() => {
+					navigate("/login");
+				}, 3000);
+			} else if (error.response?.data?.mensaje) {
 				setMensaje(error.response.data.mensaje);
 			} else {
 				setMensaje(

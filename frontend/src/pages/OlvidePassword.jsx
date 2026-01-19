@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import api from "../services/api";
 import "../styles/Auth.css";
 
 const OlvidePassword = () => {
@@ -17,10 +17,9 @@ const OlvidePassword = () => {
 		setCargando(true);
 
 		try {
-			const response = await axios.post(
-				"http://localhost:3000/api/auth/solicitar-recuperacion",
-				{ email },
-			);
+			const response = await api.post("/auth/solicitar-recuperacion", {
+				email,
+			});
 
 			if (response.data.success) {
 				setMensaje(response.data.mensaje);
