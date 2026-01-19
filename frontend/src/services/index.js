@@ -136,6 +136,11 @@ export const usuariosService = {
 		return response.data;
 	},
 
+	eliminar: async (id) => {
+		const response = await api.delete(`/usuarios/${id}`);
+		return response.data;
+	},
+
 	cambiarPassword: async (data) => {
 		const response = await api.put("/usuarios/cambiar-password", data);
 		return response.data;

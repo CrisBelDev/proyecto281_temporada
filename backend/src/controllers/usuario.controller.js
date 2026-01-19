@@ -42,6 +42,15 @@ exports.crearUsuario = async (req, res) => {
 			});
 		}
 
+		// Verificar que el rol existe
+		const rol = await Rol.findByPk(id_rol);
+		if (!rol) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "Rol no válido",
+			});
+		}
+
 		// Verificar si el email ya existe en la empresa
 		const usuarioExistente = await Usuario.findOne({
 			where: { email, id_empresa },
@@ -147,9 +156,31 @@ exports.actualizarUsuario = async (req, res) => {
 		// Actualizar campos
 		if (nombre) usuario.nombre = nombre;
 		if (apellido) usuario.apellido = apellido;
-		if (email) usuario.email = email;
+		if (email) {
+			// Verificar si el email ya existe en la empresa (excluyendo el usuario actual)
+			const usuarioConEmail = await Usuario.findOne({
+				where: { email, id_empresa },
+			});
+			if (usuarioConEmail && usuarioConEmail.id_usuario !== usuario.id_usuario) {
+				return res.status(400).json({
+					success: false,
+					mensaje: "El email ya está registrado en esta empresa",
+				});
+			}
+			usuario.email = email;
+		}
 		if (telefono) usuario.telefono = telefono;
-		if (id_rol) usuario.id_rol = id_rol;
+		if (id_rol) {
+			// Verificar que el rol existe
+			const rol = await Rol.findByPk(id_rol);
+			if (!rol) {
+				return res.status(400).json({
+					success: false,
+					mensaje: "Rol no válido",
+				});
+			}
+			usuario.id_rol = id_rol;
+		}
 
 		await usuario.save();
 
@@ -206,6 +237,51 @@ exports.toggleUsuario = async (req, res) => {
 		return res.status(500).json({
 			success: false,
 			mensaje: "Error al cambiar estado del usuario",
+			error: error.message,
+		});
+	}
+};
+
+// Eliminar usuario
+exports.eliminarUsuario = async (req, res) => {
+	try {
+		const { id_empresa } = req.usuario;
+		const { id } = req.params;
+
+		const usuario = await Usuario.findOne({
+			where: {
+				id_usuario: id,
+				id_empresa,
+			},
+		});
+
+		if (!usuario) {
+			return res.status(404).json({
+				success: false,
+				mensaje: "Usuario no encontrado",
+			});
+		}
+
+		// No permitir eliminar al propio usuario
+		if (usuario.id_usuario === req.usuario.id_usuario) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "No puedes eliminar tu propia cuenta",
+			});
+		}
+
+		// Eliminar usuario
+		await usuario.destroy();
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Usuario eliminado exitosamente",
+		});
+	} catch (error) {
+		console.error("Error al eliminar usuario:", error);
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al eliminar usuario",
 			error: error.message,
 		});
 	}

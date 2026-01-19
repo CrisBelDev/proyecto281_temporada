@@ -9,6 +9,8 @@ function Usuarios() {
 	const [usuarios, setUsuarios] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);
+	const [modo, setModo] = useState("crear"); // 'crear' o 'editar'
+	const [usuarioEditando, setUsuarioEditando] = useState(null);
 	const [formData, setFormData] = useState({
 		nombre: "",
 		apellido: "",
@@ -37,15 +39,30 @@ function Usuarios() {
 		}
 	};
 
-	const handleOpenModal = () => {
-		setFormData({
-			nombre: "",
-			apellido: "",
-			email: "",
-			password: "",
-			telefono: "",
-			id_rol: "2",
-		});
+	const handleOpenModal = (usuario = null) => {
+		if (usuario) {
+			setModo("editar");
+			setUsuarioEditando(usuario);
+			setFormData({
+				nombre: usuario.nombre || "",
+				apellido: usuario.apellido || "",
+				email: usuario.email || "",
+				password: "", // No mostrar contraseña
+				telefono: usuario.telefono || "",
+				id_rol: usuario.rol?.id_rol?.toString() || "2",
+			});
+		} else {
+			setModo("crear");
+			setUsuarioEditando(null);
+			setFormData({
+				nombre: "",
+				apellido: "",
+				email: "",
+				password: "",
+				telefono: "",
+				id_rol: "2",
+			});
+		}
 		setModalOpen(true);
 	};
 
@@ -63,12 +80,19 @@ function Usuarios() {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
-			await usuariosService.crear(formData);
+			if (modo === "crear") {
+				await usuariosService.crear(formData);
+				alert("Usuario creado exitosamente");
+			} else {
+				const dataToUpdate = { ...formData };
+				if (!dataToUpdate.password) delete dataToUpdate.password; // No enviar password vacío
+				await usuariosService.actualizar(usuarioEditando.id_usuario, dataToUpdate);
+				alert("Usuario actualizado exitosamente");
+			}
 			handleCloseModal();
 			cargarUsuarios();
-			alert("Usuario creado exitosamente");
 		} catch (error) {
-			alert(error.response?.data?.mensaje || "Error al crear usuario");
+			alert(error.response?.data?.mensaje || "Error al procesar usuario");
 		}
 	};
 
@@ -79,6 +103,18 @@ function Usuarios() {
 				cargarUsuarios();
 			} catch (error) {
 				alert("Error al cambiar estado");
+			}
+		}
+	};
+
+	const handleDelete = async (id) => {
+		if (window.confirm("¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.")) {
+			try {
+				await usuariosService.eliminar(id);
+				cargarUsuarios();
+				alert("Usuario eliminado exitosamente");
+			} catch (error) {
+				alert(error.response?.data?.mensaje || "Error al eliminar usuario");
 			}
 		}
 	};
@@ -140,6 +176,20 @@ function Usuarios() {
 									>
 										{usuario.activo ? "🔒" : "🔓"}
 									</button>
+									<button
+										onClick={() => handleOpenModal(usuario)}
+										className="btn-icon"
+										title="Editar usuario"
+									>
+										✏️
+									</button>
+									<button
+										onClick={() => handleDelete(usuario.id_usuario)}
+										className="btn-icon btn-danger"
+										title="Eliminar usuario"
+									>
+										🗑️
+									</button>
 								</td>
 							</tr>
 						))}
@@ -150,7 +200,7 @@ function Usuarios() {
 			<Modal
 				isOpen={modalOpen}
 				onClose={handleCloseModal}
-				title="Nuevo Usuario"
+				title={modo === "crear" ? "Nuevo Usuario" : "Editar Usuario"}
 			>
 				<form onSubmit={handleSubmit} className="form">
 					<div className="form-row">
@@ -187,13 +237,13 @@ function Usuarios() {
 					</div>
 
 					<div className="form-group">
-						<label>Contraseña *</label>
+						<label>Contraseña {modo === "crear" ? "*" : "(dejar vacío para mantener)"}</label>
 						<input
 							type="password"
 							name="password"
 							value={formData.password}
 							onChange={handleChange}
-							required
+							required={modo === "crear"}
 							minLength="6"
 						/>
 					</div>
@@ -230,7 +280,7 @@ function Usuarios() {
 							Cancelar
 						</button>
 						<button type="submit" className="btn btn-primary">
-							Crear Usuario
+							{modo === "crear" ? "Crear Usuario" : "Actualizar Usuario"}
 						</button>
 					</div>
 				</form>

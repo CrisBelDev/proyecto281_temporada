@@ -12,6 +12,7 @@ router.get("/", usuarioController.obtenerUsuarios);
 router.get("/:id", usuarioController.obtenerUsuarioPorId);
 router.post("/", verificarRol("ADMIN"), usuarioController.crearUsuario);
 router.put("/:id", verificarRol("ADMIN"), usuarioController.actualizarUsuario);
+router.delete("/:id", verificarRol("ADMIN"), usuarioController.eliminarUsuario);
 router.patch(
 	"/:id/toggle",
 	verificarRol("ADMIN"),

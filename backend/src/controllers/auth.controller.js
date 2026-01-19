@@ -291,8 +291,6 @@ exports.verificarEmail = async (req, res) => {
 			return res.status(200).json({
 				success: true,
 				mensaje: "Este email ya ha sido verificado. Puedes iniciar sesión.",
-				success: false,
-				mensaje: "El token de verificación ha expirado. Solicita uno nuevo.",
 			});
 		}
 
