@@ -86,7 +86,10 @@ function Usuarios() {
 			} else {
 				const dataToUpdate = { ...formData };
 				if (!dataToUpdate.password) delete dataToUpdate.password; // No enviar password vacío
-				await usuariosService.actualizar(usuarioEditando.id_usuario, dataToUpdate);
+				await usuariosService.actualizar(
+					usuarioEditando.id_usuario,
+					dataToUpdate,
+				);
 				alert("Usuario actualizado exitosamente");
 			}
 			handleCloseModal();
@@ -108,7 +111,11 @@ function Usuarios() {
 	};
 
 	const handleDelete = async (id) => {
-		if (window.confirm("¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.")) {
+		if (
+			window.confirm(
+				"¿Está seguro de que desea eliminar este usuario? Esta acción no se puede deshacer.",
+			)
+		) {
 			try {
 				await usuariosService.eliminar(id);
 				cargarUsuarios();
@@ -135,7 +142,10 @@ function Usuarios() {
 		<div className="usuarios-page">
 			<div className="page-header">
 				<h1>Usuarios</h1>
-				<button onClick={handleOpenModal} className="btn btn-primary">
+				<button
+					onClick={() => handleOpenModal(null)}
+					className="btn btn-primary"
+				>
 					+ Nuevo Usuario
 				</button>
 			</div>
@@ -237,7 +247,10 @@ function Usuarios() {
 					</div>
 
 					<div className="form-group">
-						<label>Contraseña {modo === "crear" ? "*" : "(dejar vacío para mantener)"}</label>
+						<label>
+							Contraseña{" "}
+							{modo === "crear" ? "*" : "(dejar vacío para mantener)"}
+						</label>
 						<input
 							type="password"
 							name="password"

@@ -23,6 +23,7 @@ const productosRoutes = require("./routes/productos.routes");
 const ventasRoutes = require("./routes/ventas.routes");
 const comprasRoutes = require("./routes/compras.routes");
 const reportesRoutes = require("./routes/reportes.routes");
+const clientesRoutes = require("./routes/clientes.routes");
 
 const app = express();
 
@@ -148,6 +149,7 @@ app.use("/api/productos", productosRoutes);
 app.use("/api/ventas", ventasRoutes);
 app.use("/api/compras", comprasRoutes);
 app.use("/api/reportes", reportesRoutes);
+app.use("/api/clientes", clientesRoutes);
 
 // Manejo de errores 404
 app.use((req, res) => {

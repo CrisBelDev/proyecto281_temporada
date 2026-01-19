@@ -23,6 +23,7 @@ import Compras from "./pages/Compras";
 import NuevaCompra from "./pages/NuevaCompra";
 import Usuarios from "./pages/Usuarios";
 import Reportes from "./pages/Reportes";
+import Clientes from "./pages/Clientes";
 
 function App() {
 	return (
@@ -53,7 +54,8 @@ function App() {
 					>
 						<Route index element={<Navigate to="/dashboard" replace />} />
 						<Route path="dashboard" element={<Dashboard />} />
-						<Route path="productos" element={<Productos />} />
+						<Route path="productos" element={<Productos />} />{" "}
+						<Route path="clientes" element={<Clientes />} />{" "}
 						<Route path="ventas" element={<Ventas />} />
 						<Route path="ventas/nueva" element={<NuevaVenta />} />
 						<Route path="compras" element={<Compras />} />

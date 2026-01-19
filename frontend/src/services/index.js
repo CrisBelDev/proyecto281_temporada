@@ -170,3 +170,47 @@ export const reportesService = {
 		return response.data;
 	},
 };
+
+export const clientesService = {
+	obtenerTodos: async (busqueda = "") => {
+		const response = await api.get("/clientes", {
+			params: { busqueda },
+		});
+		return response.data;
+	},
+
+	obtenerPorId: async (id) => {
+		const response = await api.get(`/clientes/${id}`);
+		return response.data;
+	},
+
+	obtenerEliminados: async () => {
+		const response = await api.get("/clientes/eliminados");
+		return response.data;
+	},
+
+	crear: async (data) => {
+		const response = await api.post("/clientes", data);
+		return response.data;
+	},
+
+	actualizar: async (id, data) => {
+		const response = await api.put(`/clientes/${id}`, data);
+		return response.data;
+	},
+
+	toggle: async (id) => {
+		const response = await api.patch(`/clientes/${id}/toggle`);
+		return response.data;
+	},
+
+	eliminar: async (id) => {
+		const response = await api.delete(`/clientes/${id}`);
+		return response.data;
+	},
+
+	restaurar: async (id) => {
+		const response = await api.patch(`/clientes/${id}/restaurar`);
+		return response.data;
+	},
+};

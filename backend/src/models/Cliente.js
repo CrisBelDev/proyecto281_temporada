@@ -10,12 +10,14 @@ const Cliente = sequelize.define(
 			autoIncrement: true,
 		},
 		id_empresa: {
+			// id_tenant - FK hacia empresas
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			references: {
 				model: "empresas",
 				key: "id_empresa",
 			},
+			comment: "ID Tenant - Referencia a la microempresa/empresa",
 		},
 		nombre: {
 			type: DataTypes.STRING(200),
@@ -41,8 +43,10 @@ const Cliente = sequelize.define(
 	{
 		tableName: "clientes",
 		timestamps: true,
+		paranoid: false, // Deshabilitado temporalmente hasta ejecutar migración
 		createdAt: "fecha_creacion",
 		updatedAt: "fecha_actualizacion",
+		// deletedAt: "fecha_eliminacion", // Descomentar después de ejecutar migración
 	},
 );
 

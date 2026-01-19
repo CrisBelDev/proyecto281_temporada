@@ -33,6 +33,12 @@ function Layout() {
 						📦 Productos
 					</NavLink>
 					<NavLink
+						to="/clientes"
+						className={({ isActive }) => (isActive ? "active" : "")}
+					>
+						👤 Clientes
+					</NavLink>
+					<NavLink
 						to="/ventas"
 						className={({ isActive }) => (isActive ? "active" : "")}
 					>
