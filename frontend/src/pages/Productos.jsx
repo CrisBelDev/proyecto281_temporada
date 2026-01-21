@@ -7,9 +7,11 @@ import "../styles/Productos.css";
 function Productos() {
 	const { isAdmin } = useAuth();
 	const [productos, setProductos] = useState([]);
+	const [categorias, setCategorias] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [productoEdit, setProductoEdit] = useState(null);
+	const [filtroCategoria, setFiltroCategoria] = useState("");
 	const [formData, setFormData] = useState({
 		codigo: "",
 		nombre: "",
@@ -18,11 +20,30 @@ function Productos() {
 		precio_venta: "",
 		stock_actual: "",
 		stock_minimo: "",
+		id_categoria: "",
 	});
 
 	useEffect(() => {
 		cargarProductos();
+		cargarCategorias();
 	}, []);
+
+	const cargarCategorias = async () => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch("http://localhost:3000/api/categorias", {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			const data = await response.json();
+			if (data.success) {
+				setCategorias(data.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar categorías:", error);
+		}
+	};
 
 	const cargarProductos = async () => {
 		try {
@@ -48,6 +69,7 @@ function Productos() {
 				precio_venta: producto.precio_venta,
 				stock_actual: producto.stock_actual,
 				stock_minimo: producto.stock_minimo,
+				id_categoria: producto.id_categoria || "",
 			});
 		} else {
 			setProductoEdit(null);
@@ -59,6 +81,7 @@ function Productos() {
 				precio_venta: "",
 				stock_actual: "",
 				stock_minimo: "",
+				id_categoria: "",
 			});
 		}
 		setModalOpen(true);
@@ -111,11 +134,28 @@ function Productos() {
 		<div className="productos-page">
 			<div className="page-header">
 				<h1>Productos</h1>
-				{isAdmin() && (
-					<button onClick={() => handleOpenModal()} className="btn btn-primary">
-						+ Nuevo Producto
-					</button>
-				)}
+				<div className="header-actions">
+					<select
+						value={filtroCategoria}
+						onChange={(e) => setFiltroCategoria(e.target.value)}
+						className="filter-select"
+					>
+						<option value="">Todas las categorías</option>
+						{categorias.map((cat) => (
+							<option key={cat.id_categoria} value={cat.id_categoria}>
+								{cat.nombre}
+							</option>
+						))}
+					</select>
+					{isAdmin() && (
+						<button
+							onClick={() => handleOpenModal()}
+							className="btn btn-primary"
+						>
+							+ Nuevo Producto
+						</button>
+					)}
+				</div>
 			</div>
 
 			<div className="table-container">
@@ -124,6 +164,7 @@ function Productos() {
 						<tr>
 							<th>Código</th>
 							<th>Nombre</th>
+							<th>Categoría</th>
 							<th>Precio Compra</th>
 							<th>Precio Venta</th>
 							<th>Stock Actual</th>
@@ -133,49 +174,60 @@ function Productos() {
 						</tr>
 					</thead>
 					<tbody>
-						{productos.map((producto) => (
-							<tr key={producto.id_producto}>
-								<td>{producto.codigo}</td>
-								<td>{producto.nombre}</td>
-								<td>Bs. {parseFloat(producto.precio_compra).toFixed(2)}</td>
-								<td>Bs. {parseFloat(producto.precio_venta).toFixed(2)}</td>
-								<td
-									className={
-										producto.stock_actual <= producto.stock_minimo
-											? "stock-bajo"
-											: ""
-									}
-								>
-									{producto.stock_actual}
-								</td>
-								<td>{producto.stock_minimo}</td>
-								<td>
-									<span
-										className={`badge ${producto.activo ? "badge-success" : "badge-danger"}`}
-									>
-										{producto.activo ? "Activo" : "Inactivo"}
-									</span>
-								</td>
-								{isAdmin() && (
+						{productos
+							.filter(
+								(p) =>
+									!filtroCategoria ||
+									p.id_categoria === parseInt(filtroCategoria),
+							)
+							.map((producto) => (
+								<tr key={producto.id_producto}>
+									<td>{producto.codigo}</td>
+									<td>{producto.nombre}</td>
 									<td>
-										<button
-											onClick={() => handleOpenModal(producto)}
-											className="btn-icon"
-											title="Editar"
-										>
-											✏️
-										</button>
-										<button
-											onClick={() => handleToggle(producto.id_producto)}
-											className="btn-icon"
-											title="Cambiar estado"
-										>
-											{producto.activo ? "🔒" : "🔓"}
-										</button>
+										<span className="badge badge-info">
+											{producto.categoria?.nombre || "Sin categoría"}
+										</span>
 									</td>
-								)}
-							</tr>
-						))}
+									<td>Bs. {parseFloat(producto.precio_compra).toFixed(2)}</td>
+									<td>Bs. {parseFloat(producto.precio_venta).toFixed(2)}</td>
+									<td
+										className={
+											producto.stock_actual <= producto.stock_minimo
+												? "stock-bajo"
+												: ""
+										}
+									>
+										{producto.stock_actual}
+									</td>
+									<td>{producto.stock_minimo}</td>
+									<td>
+										<span
+											className={`badge ${producto.activo ? "badge-success" : "badge-danger"}`}
+										>
+											{producto.activo ? "Activo" : "Inactivo"}
+										</span>
+									</td>
+									{isAdmin() && (
+										<td>
+											<button
+												onClick={() => handleOpenModal(producto)}
+												className="btn-icon"
+												title="Editar"
+											>
+												✏️
+											</button>
+											<button
+												onClick={() => handleToggle(producto.id_producto)}
+												className="btn-icon"
+												title="Cambiar estado"
+											>
+												{producto.activo ? "🔒" : "🔓"}
+											</button>
+										</td>
+									)}
+								</tr>
+							))}
 					</tbody>
 				</table>
 			</div>
@@ -207,6 +259,22 @@ function Productos() {
 								required
 							/>
 						</div>
+					</div>
+
+					<div className="form-group">
+						<label>Categoría</label>
+						<select
+							name="id_categoria"
+							value={formData.id_categoria}
+							onChange={handleChange}
+						>
+							<option value="">Sin categoría</option>
+							{categorias.map((cat) => (
+								<option key={cat.id_categoria} value={cat.id_categoria}>
+									{cat.nombre}
+								</option>
+							))}
+						</select>
 					</div>
 
 					<div className="form-group">

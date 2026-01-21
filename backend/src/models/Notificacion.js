@@ -25,7 +25,13 @@ const Notificacion = sequelize.define(
 			},
 		},
 		tipo: {
-			type: DataTypes.ENUM("STOCK_BAJO", "VENTA", "COMPRA", "SISTEMA"),
+			type: DataTypes.ENUM(
+				"STOCK_BAJO",
+				"STOCK_AGOTADO",
+				"VENTA",
+				"COMPRA",
+				"SISTEMA",
+			),
 			allowNull: false,
 		},
 		titulo: {

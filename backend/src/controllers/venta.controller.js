@@ -161,6 +161,33 @@ exports.crearVenta = async (req, res) => {
 			// Descontar stock
 			producto.stock_actual -= item.cantidad;
 			await producto.save({ transaction: t });
+
+			// Verificar si el stock llegó a 0 o está bajo después de la venta
+			if (producto.stock_actual === 0) {
+				await Notificacion.create(
+					{
+						id_empresa,
+						id_usuario,
+						tipo: "STOCK_AGOTADO",
+						titulo: "Producto sin stock",
+						mensaje: `El producto "${producto.nombre}" se agotó tras una venta y no será visible en el portal`,
+						leida: false,
+					},
+					{ transaction: t },
+				);
+			} else if (producto.stock_actual <= producto.stock_minimo) {
+				await Notificacion.create(
+					{
+						id_empresa,
+						id_usuario,
+						tipo: "STOCK_BAJO",
+						titulo: "Stock bajo",
+						mensaje: `El producto "${producto.nombre}" tiene stock bajo tras una venta (${producto.stock_actual} unidades, mínimo: ${producto.stock_minimo})`,
+						leida: false,
+					},
+					{ transaction: t },
+				);
+			}
 		}
 
 		const descuentoAplicado = descuento || 0;

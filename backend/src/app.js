@@ -20,10 +20,14 @@ const Notificacion = require("./models/Notificacion");
 const authRoutes = require("./routes/auth.routes");
 const usuariosRoutes = require("./routes/usuarios.routes");
 const productosRoutes = require("./routes/productos.routes");
+const categoriasRoutes = require("./routes/categorias.routes");
+const notificacionesRoutes = require("./routes/notificaciones.routes");
 const ventasRoutes = require("./routes/ventas.routes");
 const comprasRoutes = require("./routes/compras.routes");
 const reportesRoutes = require("./routes/reportes.routes");
 const clientesRoutes = require("./routes/clientes.routes");
+const empresasRoutes = require("./routes/empresas.routes");
+const portalRoutes = require("./routes/portal.routes");
 
 const app = express();
 
@@ -146,10 +150,14 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/usuarios", usuariosRoutes);
 app.use("/api/productos", productosRoutes);
+app.use("/api/categorias", categoriasRoutes);
+app.use("/api/notificaciones", notificacionesRoutes);
 app.use("/api/ventas", ventasRoutes);
 app.use("/api/compras", comprasRoutes);
 app.use("/api/reportes", reportesRoutes);
 app.use("/api/clientes", clientesRoutes);
+app.use("/api/empresas", empresasRoutes);
+app.use("/api/portal", portalRoutes); // Portal público
 
 // Manejo de errores 404
 app.use((req, res) => {

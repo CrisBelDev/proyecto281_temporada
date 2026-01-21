@@ -3,14 +3,37 @@ const Rol = require("../models/Rol");
 const Empresa = require("../models/Empresa");
 
 // Obtener todos los usuarios de la empresa (multitenant)
+// SUPERUSER puede ver usuarios de todas las empresas
 exports.obtenerUsuarios = async (req, res) => {
 	try {
-		const { id_empresa } = req.usuario;
+		const { id_empresa, nombre_rol } = req.usuario;
+		const { empresa_id } = req.query; // Parámetro opcional para SUPERUSER
+
+		let whereClause = {};
+
+		// Si es SUPERUSER y especifica una empresa, filtrar por esa empresa
+		// Si es SUPERUSER sin especificar empresa, traer todos
+		// Si no es SUPERUSER, solo ver su empresa
+		if (nombre_rol === "SUPERUSER") {
+			if (empresa_id) {
+				whereClause = { id_empresa: empresa_id };
+			}
+			// Si no especifica empresa, whereClause queda vacío (trae todos)
+		} else {
+			whereClause = { id_empresa };
+		}
 
 		const usuarios = await Usuario.findAll({
-			where: { id_empresa },
+			where: whereClause,
 			attributes: { exclude: ["password"] },
-			include: [{ model: Rol, as: "rol" }],
+			include: [
+				{ model: Rol, as: "rol" },
+				{
+					model: Empresa,
+					as: "empresa",
+					attributes: ["id_empresa", "nombre", "nit"],
+				},
+			],
 			order: [["fecha_creacion", "DESC"]],
 		});
 
@@ -29,10 +52,12 @@ exports.obtenerUsuarios = async (req, res) => {
 };
 
 // Crear nuevo usuario
+// SUPERUSER puede crear usuarios para cualquier empresa
 exports.crearUsuario = async (req, res) => {
 	try {
-		const { id_empresa } = req.usuario;
-		const { nombre, apellido, email, password, telefono, id_rol } = req.body;
+		const { id_empresa, nombre_rol } = req.usuario;
+		const { nombre, apellido, email, password, telefono, id_rol, empresa_id } =
+			req.body;
 
 		// Validaciones
 		if (!nombre || !email || !password || !id_rol) {
@@ -40,6 +65,21 @@ exports.crearUsuario = async (req, res) => {
 				success: false,
 				mensaje: "Faltan campos obligatorios",
 			});
+		}
+
+		// Determinar a qué empresa pertenece el nuevo usuario
+		let empresaDestino = id_empresa;
+		if (nombre_rol === "SUPERUSER" && empresa_id) {
+			empresaDestino = empresa_id;
+
+			// Verificar que la empresa existe
+			const empresa = await Empresa.findByPk(empresaDestino);
+			if (!empresa) {
+				return res.status(400).json({
+					success: false,
+					mensaje: "Empresa no válida",
+				});
+			}
 		}
 
 		// Verificar que el rol existe
@@ -51,9 +91,17 @@ exports.crearUsuario = async (req, res) => {
 			});
 		}
 
+		// Solo SUPERUSER puede crear otros SUPERUSER
+		if (rol.nombre === "SUPERUSER" && nombre_rol !== "SUPERUSER") {
+			return res.status(403).json({
+				success: false,
+				mensaje: "No tienes permisos para crear usuarios SUPERUSER",
+			});
+		}
+
 		// Verificar si el email ya existe en la empresa
 		const usuarioExistente = await Usuario.findOne({
-			where: { email, id_empresa },
+			where: { email, id_empresa: empresaDestino },
 		});
 
 		if (usuarioExistente) {
@@ -65,7 +113,7 @@ exports.crearUsuario = async (req, res) => {
 
 		// Crear usuario
 		const nuevoUsuario = await Usuario.create({
-			id_empresa,
+			id_empresa: empresaDestino,
 			id_rol,
 			nombre,
 			apellido,
@@ -75,10 +123,17 @@ exports.crearUsuario = async (req, res) => {
 			activo: true,
 		});
 
-		// Obtener usuario con rol
+		// Obtener usuario con rol y empresa
 		const usuarioCreado = await Usuario.findByPk(nuevoUsuario.id_usuario, {
 			attributes: { exclude: ["password"] },
-			include: [{ model: Rol, as: "rol" }],
+			include: [
+				{ model: Rol, as: "rol" },
+				{
+					model: Empresa,
+					as: "empresa",
+					attributes: ["id_empresa", "nombre", "nit"],
+				},
+			],
 		});
 
 		return res.status(201).json({
@@ -97,18 +152,30 @@ exports.crearUsuario = async (req, res) => {
 };
 
 // Obtener usuario por ID
+// SUPERUSER puede ver usuarios de cualquier empresa
 exports.obtenerUsuarioPorId = async (req, res) => {
 	try {
-		const { id_empresa } = req.usuario;
+		const { id_empresa, nombre_rol } = req.usuario;
 		const { id } = req.params;
 
+		let whereClause = { id_usuario: id };
+
+		// Si no es SUPERUSER, verificar que el usuario pertenece a su empresa
+		if (nombre_rol !== "SUPERUSER") {
+			whereClause.id_empresa = id_empresa;
+		}
+
 		const usuario = await Usuario.findOne({
-			where: {
-				id_usuario: id,
-				id_empresa,
-			},
+			where: whereClause,
 			attributes: { exclude: ["password"] },
-			include: [{ model: Rol, as: "rol" }],
+			include: [
+				{ model: Rol, as: "rol" },
+				{
+					model: Empresa,
+					as: "empresa",
+					attributes: ["id_empresa", "nombre", "nit"],
+				},
+			],
 		});
 
 		if (!usuario) {
@@ -133,17 +200,22 @@ exports.obtenerUsuarioPorId = async (req, res) => {
 };
 
 // Actualizar usuario
+// SUPERUSER puede actualizar usuarios de cualquier empresa
 exports.actualizarUsuario = async (req, res) => {
 	try {
-		const { id_empresa } = req.usuario;
+		const { id_empresa, nombre_rol } = req.usuario;
 		const { id } = req.params;
 		const { nombre, apellido, email, telefono, id_rol } = req.body;
 
+		let whereClause = { id_usuario: id };
+
+		// Si no es SUPERUSER, verificar que el usuario pertenece a su empresa
+		if (nombre_rol !== "SUPERUSER") {
+			whereClause.id_empresa = id_empresa;
+		}
+
 		const usuario = await Usuario.findOne({
-			where: {
-				id_usuario: id,
-				id_empresa,
-			},
+			where: whereClause,
 		});
 
 		if (!usuario) {
@@ -159,9 +231,12 @@ exports.actualizarUsuario = async (req, res) => {
 		if (email) {
 			// Verificar si el email ya existe en la empresa (excluyendo el usuario actual)
 			const usuarioConEmail = await Usuario.findOne({
-				where: { email, id_empresa },
+				where: { email, id_empresa: usuario.id_empresa },
 			});
-			if (usuarioConEmail && usuarioConEmail.id_usuario !== usuario.id_usuario) {
+			if (
+				usuarioConEmail &&
+				usuarioConEmail.id_usuario !== usuario.id_usuario
+			) {
 				return res.status(400).json({
 					success: false,
 					mensaje: "El email ya está registrado en esta empresa",
@@ -179,6 +254,15 @@ exports.actualizarUsuario = async (req, res) => {
 					mensaje: "Rol no válido",
 				});
 			}
+
+			// Solo SUPERUSER puede asignar el rol SUPERUSER
+			if (rol.nombre === "SUPERUSER" && nombre_rol !== "SUPERUSER") {
+				return res.status(403).json({
+					success: false,
+					mensaje: "No tienes permisos para asignar el rol SUPERUSER",
+				});
+			}
+
 			usuario.id_rol = id_rol;
 		}
 
@@ -186,7 +270,14 @@ exports.actualizarUsuario = async (req, res) => {
 
 		const usuarioActualizado = await Usuario.findByPk(usuario.id_usuario, {
 			attributes: { exclude: ["password"] },
-			include: [{ model: Rol, as: "rol" }],
+			include: [
+				{ model: Rol, as: "rol" },
+				{
+					model: Empresa,
+					as: "empresa",
+					attributes: ["id_empresa", "nombre", "nit"],
+				},
+			],
 		});
 
 		return res.status(200).json({
@@ -205,16 +296,21 @@ exports.actualizarUsuario = async (req, res) => {
 };
 
 // Activar/desactivar usuario
+// SUPERUSER puede activar/desactivar usuarios de cualquier empresa
 exports.toggleUsuario = async (req, res) => {
 	try {
-		const { id_empresa } = req.usuario;
+		const { id_empresa, nombre_rol } = req.usuario;
 		const { id } = req.params;
 
+		let whereClause = { id_usuario: id };
+
+		// Si no es SUPERUSER, verificar que el usuario pertenece a su empresa
+		if (nombre_rol !== "SUPERUSER") {
+			whereClause.id_empresa = id_empresa;
+		}
+
 		const usuario = await Usuario.findOne({
-			where: {
-				id_usuario: id,
-				id_empresa,
-			},
+			where: whereClause,
 		});
 
 		if (!usuario) {
@@ -243,16 +339,21 @@ exports.toggleUsuario = async (req, res) => {
 };
 
 // Eliminar usuario
+// SUPERUSER puede eliminar usuarios de cualquier empresa
 exports.eliminarUsuario = async (req, res) => {
 	try {
-		const { id_empresa } = req.usuario;
+		const { id_empresa, nombre_rol } = req.usuario;
 		const { id } = req.params;
 
+		let whereClause = { id_usuario: id };
+
+		// Si no es SUPERUSER, verificar que el usuario pertenece a su empresa
+		if (nombre_rol !== "SUPERUSER") {
+			whereClause.id_empresa = id_empresa;
+		}
+
 		const usuario = await Usuario.findOne({
-			where: {
-				id_usuario: id,
-				id_empresa,
-			},
+			where: whereClause,
 		});
 
 		if (!usuario) {

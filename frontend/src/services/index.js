@@ -214,3 +214,71 @@ export const clientesService = {
 		return response.data;
 	},
 };
+
+export const categoriasService = {
+	obtenerTodas: async () => {
+		const response = await api.get("/categorias");
+		return response.data;
+	},
+
+	obtenerConProductos: async () => {
+		const response = await api.get("/categorias/con-productos");
+		return response.data;
+	},
+
+	obtenerPorId: async (id) => {
+		const response = await api.get(`/categorias/${id}`);
+		return response.data;
+	},
+
+	crear: async (data) => {
+		const response = await api.post("/categorias", data);
+		return response.data;
+	},
+
+	actualizar: async (id, data) => {
+		const response = await api.put(`/categorias/${id}`, data);
+		return response.data;
+	},
+
+	eliminar: async (id) => {
+		const response = await api.delete(`/categorias/${id}`);
+		return response.data;
+	},
+};
+
+export const notificacionesService = {
+	obtenerTodas: async (soloNoLeidas = false) => {
+		const response = await api.get("/notificaciones", {
+			params: { solo_no_leidas: soloNoLeidas },
+		});
+		return response.data;
+	},
+
+	marcarComoLeida: async (id) => {
+		const response = await api.patch(`/notificaciones/${id}/leida`);
+		return response.data;
+	},
+
+	marcarTodasLeidas: async () => {
+		const response = await api.patch("/notificaciones/todas/leidas");
+		return response.data;
+	},
+
+	eliminar: async (id) => {
+		const response = await api.delete(`/notificaciones/${id}`);
+		return response.data;
+	},
+
+	limpiar: async (dias = 30) => {
+		const response = await api.delete("/notificaciones", {
+			params: { dias },
+		});
+		return response.data;
+	},
+
+	crear: async (data) => {
+		const response = await api.post("/notificaciones", data);
+		return response.data;
+	},
+};

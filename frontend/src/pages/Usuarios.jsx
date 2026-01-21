@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import { usuariosService } from "../services";
 import { useAuth } from "../context/AuthContext";
 import Modal from "../components/Modal";
+import axios from "axios";
 import "../styles/Usuarios.css";
 
 function Usuarios() {
-	const { isAdmin } = useAuth();
+	const { isAdmin, isSuperUser } = useAuth();
 	const [usuarios, setUsuarios] = useState([]);
+	const [empresas, setEmpresas] = useState([]);
+	const [roles, setRoles] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modo, setModo] = useState("crear"); // 'crear' o 'editar'
 	const [usuarioEditando, setUsuarioEditando] = useState(null);
+	const [empresaFiltro, setEmpresaFiltro] = useState("");
 	const [formData, setFormData] = useState({
 		nombre: "",
 		apellido: "",
@@ -18,24 +22,77 @@ function Usuarios() {
 		password: "",
 		telefono: "",
 		id_rol: "2",
+		empresa_id: "",
 	});
 
 	useEffect(() => {
 		if (isAdmin()) {
 			cargarUsuarios();
+			cargarRoles();
+			if (isSuperUser()) {
+				cargarEmpresas();
+			}
 		}
 	}, []);
 
+	useEffect(() => {
+		if (isSuperUser() && empresaFiltro !== "") {
+			cargarUsuarios();
+		}
+	}, [empresaFiltro]);
+
 	const cargarUsuarios = async () => {
 		try {
-			const response = await usuariosService.obtenerTodos();
-			if (response.success) {
-				setUsuarios(response.data);
+			let url = "/api/usuarios";
+			if (isSuperUser() && empresaFiltro) {
+				url += `?empresa_id=${empresaFiltro}`;
+			}
+			const token = localStorage.getItem("token");
+			const response = await axios.get(url, {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (response.data.success) {
+				setUsuarios(response.data.data);
 			}
 		} catch (error) {
 			console.error("Error al cargar usuarios:", error);
 		} finally {
 			setLoading(false);
+		}
+	};
+
+	const cargarEmpresas = async () => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await axios.get("/api/empresas", {
+				headers: { Authorization: `Bearer ${token}` },
+			});
+			if (response.data.success) {
+				setEmpresas(response.data.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar empresas:", error);
+		}
+	};
+
+	const cargarRoles = async () => {
+		try {
+			// Roles base
+			const rolesBase = [
+				{ id_rol: 1, nombre: "SUPERUSER" },
+				{ id_rol: 2, nombre: "ADMIN" },
+				{ id_rol: 3, nombre: "VENDEDOR" },
+			];
+
+			// Si es SUPERUSER, puede asignar todos los roles
+			// Si es ADMIN, solo puede asignar ADMIN y VENDEDOR
+			if (isSuperUser()) {
+				setRoles(rolesBase);
+			} else {
+				setRoles(rolesBase.filter((r) => r.nombre !== "SUPERUSER"));
+			}
+		} catch (error) {
+			console.error("Error al cargar roles:", error);
 		}
 	};
 
@@ -50,6 +107,7 @@ function Usuarios() {
 				password: "", // No mostrar contraseña
 				telefono: usuario.telefono || "",
 				id_rol: usuario.rol?.id_rol?.toString() || "2",
+				empresa_id: usuario.empresa?.id_empresa?.toString() || "",
 			});
 		} else {
 			setModo("crear");
@@ -61,6 +119,8 @@ function Usuarios() {
 				password: "",
 				telefono: "",
 				id_rol: "2",
+				empresa_id:
+					empresas.length > 0 ? empresas[0].id_empresa.toString() : "",
 			});
 		}
 		setModalOpen(true);
@@ -141,7 +201,7 @@ function Usuarios() {
 	return (
 		<div className="usuarios-page">
 			<div className="page-header">
-				<h1>Usuarios</h1>
+				<h1>Gestión de Usuarios {isSuperUser() && "(Todas las Empresas)"}</h1>
 				<button
 					onClick={() => handleOpenModal(null)}
 					className="btn btn-primary"
@@ -150,6 +210,24 @@ function Usuarios() {
 				</button>
 			</div>
 
+			{isSuperUser() && empresas.length > 0 && (
+				<div className="filter-section">
+					<label>Filtrar por Empresa:</label>
+					<select
+						value={empresaFiltro}
+						onChange={(e) => setEmpresaFiltro(e.target.value)}
+						className="form-control"
+					>
+						<option value="">Todas las empresas</option>
+						{empresas.map((empresa) => (
+							<option key={empresa.id_empresa} value={empresa.id_empresa}>
+								{empresa.nombre} {empresa.nit && `(${empresa.nit})`}
+							</option>
+						))}
+					</select>
+				</div>
+			)}
+
 			<div className="table-container">
 				<table className="table">
 					<thead>
@@ -157,6 +235,7 @@ function Usuarios() {
 							<th>Nombre</th>
 							<th>Email</th>
 							<th>Teléfono</th>
+							{isSuperUser() && <th>Empresa</th>}
 							<th>Rol</th>
 							<th>Estado</th>
 							<th>Acciones</th>
@@ -170,7 +249,14 @@ function Usuarios() {
 								</td>
 								<td>{usuario.email}</td>
 								<td>{usuario.telefono || "-"}</td>
-								<td>{usuario.rol?.nombre}</td>
+								{isSuperUser() && <td>{usuario.empresa?.nombre || "N/A"}</td>}
+								<td>
+									<span
+										className={`badge badge-${usuario.rol?.nombre === "SUPERUSER" ? "warning" : usuario.rol?.nombre === "ADMIN" ? "info" : "secondary"}`}
+									>
+										{usuario.rol?.nombre}
+									</span>
+								</td>
 								<td>
 									<span
 										className={`badge ${usuario.activo ? "badge-success" : "badge-danger"}`}
@@ -271,6 +357,47 @@ function Usuarios() {
 						/>
 					</div>
 
+					{isSuperUser() && empresas.length > 0 && modo === "crear" && (
+						<div className="form-group">
+							<label>Empresa *</label>
+							<select
+								name="empresa_id"
+								value={formData.empresa_id}
+								onChange={handleChange}
+								required
+							>
+								<option value="">Seleccionar empresa</option>
+								{empresas.map((empresa) => (
+									<option key={empresa.id_empresa} value={empresa.id_empresa}>
+										{empresa.nombre} {empresa.nit && `(${empresa.nit})`}
+									</option>
+								))}
+							</select>
+							<small className="form-hint">
+								El usuario será creado en la empresa seleccionada
+							</small>
+						</div>
+					)}
+
+					{isSuperUser() && modo === "editar" && formData.empresa_id && (
+						<div className="form-group">
+							<label>Empresa Actual</label>
+							<input
+								type="text"
+								value={
+									usuarios.find(
+										(u) => u.id_usuario === usuarioEditando?.id_usuario,
+									)?.empresa?.nombre || "N/A"
+								}
+								disabled
+								className="form-control-disabled"
+							/>
+							<small className="form-hint">
+								La empresa no puede ser modificada después de la creación
+							</small>
+						</div>
+					)}
+
 					<div className="form-group">
 						<label>Rol *</label>
 						<select
@@ -279,9 +406,18 @@ function Usuarios() {
 							onChange={handleChange}
 							required
 						>
-							<option value="1">ADMIN</option>
-							<option value="2">VENDEDOR</option>
+							<option value="">Seleccionar rol</option>
+							{roles.map((rol) => (
+								<option key={rol.id_rol} value={rol.id_rol}>
+									{rol.nombre}
+								</option>
+							))}
 						</select>
+						{isSuperUser() && (
+							<small className="form-hint">
+								⚠️ Solo SUPERUSER puede asignar el rol SUPERUSER
+							</small>
+						)}
 					</div>
 
 					<div className="form-actions">

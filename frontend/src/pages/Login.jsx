@@ -28,7 +28,7 @@ function Login() {
 		try {
 			const response = await login(formData.email, formData.password);
 			if (response.success) {
-				navigate("/dashboard");
+				navigate("/admin/dashboard");
 			} else {
 				setError(response.mensaje || "Error al iniciar sesión");
 			}

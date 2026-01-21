@@ -13,6 +13,11 @@ const Empresa = sequelize.define(
 			type: DataTypes.STRING(200),
 			allowNull: false,
 		},
+		slug: {
+			type: DataTypes.STRING(100),
+			unique: true,
+			allowNull: true,
+		},
 		nit: {
 			type: DataTypes.STRING(50),
 			unique: true,

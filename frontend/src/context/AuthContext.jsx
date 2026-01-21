@@ -52,7 +52,11 @@ export const AuthProvider = ({ children }) => {
 	};
 
 	const isAdmin = () => {
-		return usuario?.rol === "ADMIN";
+		return usuario?.rol === "ADMIN" || usuario?.rol === "SUPERUSER";
+	};
+
+	const isSuperUser = () => {
+		return usuario?.rol === "SUPERUSER";
 	};
 
 	const value = {
@@ -61,6 +65,7 @@ export const AuthProvider = ({ children }) => {
 		login,
 		logout,
 		isAdmin,
+		isSuperUser,
 	};
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

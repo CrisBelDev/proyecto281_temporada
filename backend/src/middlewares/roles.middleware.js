@@ -11,6 +11,11 @@ const verificarRol = (...rolesPermitidos) => {
 				});
 			}
 
+			// SUPERUSER tiene acceso a todo
+			if (nombre_rol === "SUPERUSER") {
+				return next();
+			}
+
 			// Verificar si el rol del usuario está en los roles permitidos
 			if (!rolesPermitidos.includes(nombre_rol)) {
 				return res.status(403).json({
