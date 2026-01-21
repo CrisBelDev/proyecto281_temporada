@@ -44,4 +44,19 @@ const DetalleCompra = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+DetalleCompra.associate = (models) => {
+	// Un detalle de compra pertenece a una compra
+	DetalleCompra.belongsTo(models.Compra, {
+		foreignKey: "id_compra",
+		as: "compra",
+	});
+
+	// Un detalle de compra pertenece a un producto
+	DetalleCompra.belongsTo(models.Producto, {
+		foreignKey: "id_producto",
+		as: "producto",
+	});
+};
+
 module.exports = DetalleCompra;

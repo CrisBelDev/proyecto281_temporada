@@ -33,4 +33,19 @@ const Categoria = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Categoria.associate = (models) => {
+	// Una categoría pertenece a una empresa
+	Categoria.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Una categoría tiene muchos productos
+	Categoria.hasMany(models.Producto, {
+		foreignKey: "id_categoria",
+		as: "productos",
+	});
+};
+
 module.exports = Categoria;

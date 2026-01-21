@@ -24,4 +24,13 @@ const Rol = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Rol.associate = (models) => {
+	// Un rol tiene muchos usuarios
+	Rol.hasMany(models.Usuario, {
+		foreignKey: "id_rol",
+		as: "usuarios",
+	});
+};
+
 module.exports = Rol;

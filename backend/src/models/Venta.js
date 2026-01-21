@@ -78,4 +78,31 @@ const Venta = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Venta.associate = (models) => {
+	// Una venta pertenece a una empresa
+	Venta.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Una venta pertenece a un usuario
+	Venta.belongsTo(models.Usuario, {
+		foreignKey: "id_usuario",
+		as: "usuario",
+	});
+
+	// Una venta pertenece a un cliente
+	Venta.belongsTo(models.Cliente, {
+		foreignKey: "id_cliente",
+		as: "cliente",
+	});
+
+	// Una venta tiene muchos detalles
+	Venta.hasMany(models.DetalleVenta, {
+		foreignKey: "id_venta",
+		as: "detalles",
+	});
+};
+
 module.exports = Venta;

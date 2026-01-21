@@ -96,4 +96,37 @@ Usuario.prototype.compararPassword = async function (password) {
 	return await bcrypt.compare(password, this.password);
 };
 
+// Definir asociaciones
+Usuario.associate = (models) => {
+	// Un usuario pertenece a una empresa
+	Usuario.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Un usuario pertenece a un rol
+	Usuario.belongsTo(models.Rol, {
+		foreignKey: "id_rol",
+		as: "rol",
+	});
+
+	// Un usuario tiene muchas ventas
+	Usuario.hasMany(models.Venta, {
+		foreignKey: "id_usuario",
+		as: "ventas",
+	});
+
+	// Un usuario tiene muchas compras
+	Usuario.hasMany(models.Compra, {
+		foreignKey: "id_usuario",
+		as: "compras",
+	});
+
+	// Un usuario tiene muchas notificaciones
+	Usuario.hasMany(models.Notificacion, {
+		foreignKey: "id_usuario",
+		as: "notificaciones",
+	});
+};
+
 module.exports = Usuario;

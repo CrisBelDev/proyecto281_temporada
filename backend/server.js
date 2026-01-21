@@ -4,8 +4,39 @@ const sequelize = require("./src/config/database");
 const Rol = require("./src/models/Rol");
 const Usuario = require("./src/models/Usuario");
 const Empresa = require("./src/models/Empresa");
+const Cliente = require("./src/models/Cliente");
+const Categoria = require("./src/models/Categoria");
+const Producto = require("./src/models/Producto");
+const Proveedor = require("./src/models/Proveedor");
+const Venta = require("./src/models/Venta");
+const DetalleVenta = require("./src/models/DetalleVenta");
+const Compra = require("./src/models/Compra");
+const DetalleCompra = require("./src/models/DetalleCompra");
+const Notificacion = require("./src/models/Notificacion");
 
 const PORT = process.env.PORT || 3000;
+
+// Inicializar asociaciones entre modelos
+const models = {
+	Empresa,
+	Rol,
+	Usuario,
+	Cliente,
+	Categoria,
+	Producto,
+	Proveedor,
+	Venta,
+	DetalleVenta,
+	Compra,
+	DetalleCompra,
+	Notificacion,
+};
+
+Object.values(models).forEach((model) => {
+	if (model.associate) {
+		model.associate(models);
+	}
+});
 
 // Función para inicializar roles por defecto
 const inicializarRoles = async () => {

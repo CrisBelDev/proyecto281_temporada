@@ -74,16 +74,26 @@ exports.actualizar = async (req, res) => {
 		const { id } = req.params;
 		const { nombre, nit, telefono, email, direccion } = req.body;
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
 
-		// Buscar cliente dentro del contexto del tenant
+		// Construir where clause según el rol
+		const whereClause = { id_cliente: id };
+		if (!isSuperUser) {
+			whereClause.id_empresa = id_tenant;
+		}
+
+		// Buscar cliente
 		const cliente = await Cliente.findOne({
-			where: { id_cliente: id, id_empresa: id_tenant },
+			where: whereClause,
 		});
 
 		if (!cliente) {
 			return res.status(404).json({
 				success: false,
-				mensaje: "Cliente no encontrado en esta empresa",
+				mensaje: isSuperUser
+					? "Cliente no encontrado"
+					: "Cliente no encontrado en esta empresa",
 			});
 		}
 
@@ -95,12 +105,12 @@ exports.actualizar = async (req, res) => {
 			});
 		}
 
-		// Verificar si ya existe otro cliente con el mismo NIT en este tenant
+		// Verificar si ya existe otro cliente con el mismo NIT en la misma empresa
 		if (nit && nit !== cliente.nit) {
 			const clienteExistente = await Cliente.findOne({
 				where: {
 					nit,
-					id_empresa: id_tenant,
+					id_empresa: cliente.id_empresa, // Usar la empresa del cliente
 					id_cliente: { [Op.ne]: id },
 				},
 			});
@@ -143,15 +153,36 @@ exports.actualizar = async (req, res) => {
 // PUNTO 3: Buscar todos los clientes de una microempresa (por id_tenant)
 // ============================================
 // Ejemplo: GET /api/clientes?busqueda=sistoys
-// O mejor: GET /api/clientes (automáticamente filtra por el tenant del usuario)
+// SUPERUSER: GET /api/clientes (ve todos) o GET /api/clientes?empresa_id=2 (filtra por empresa)
 exports.obtenerTodos = async (req, res) => {
 	try {
-		const { busqueda } = req.query;
-		// ID_TENANT: Se obtiene automáticamente del usuario autenticado
+		const { busqueda, empresa_id } = req.query;
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
 
-		// Condición base: siempre filtrar por el tenant
-		let whereClause = { id_empresa: id_tenant };
+		console.log(
+			"🔍 [CLIENTES] Usuario:",
+			req.usuario.email,
+			"| Rol:",
+			rolUsuario,
+			"| isSuperUser:",
+			isSuperUser,
+		);
+
+		// Condición base: filtrar por tenant EXCEPTO para SUPERUSER
+		let whereClause = {};
+
+		if (isSuperUser) {
+			// SUPERUSER: puede filtrar por empresa específica o ver todas
+			if (empresa_id) {
+				whereClause.id_empresa = empresa_id;
+			}
+			// Si no se especifica empresa_id, whereClause queda vacío = todos los clientes
+		} else {
+			// Usuarios normales: solo ven clientes de su empresa
+			whereClause.id_empresa = id_tenant;
+		}
 
 		// Si hay búsqueda, agregar filtros
 		if (busqueda) {
@@ -163,17 +194,16 @@ exports.obtenerTodos = async (req, res) => {
 			];
 		}
 
-		// Incluir información de la empresa (tenant) para verificación
+		// Incluir información de la empresa
 		const clientes = await Cliente.findAll({
 			where: whereClause,
-			// Temporalmente sin include hasta verificar asociaciones
-			// include: [
-			// 	{
-			// 		model: Empresa,
-			// 		as: "empresa",
-			// 		attributes: ["id_empresa", "nombre"],
-			// 	},
-			// ],
+			include: [
+				{
+					model: Empresa,
+					as: "empresa",
+					attributes: ["id_empresa", "nombre", "nit"],
+				},
+			],
 			order: [["fecha_creacion", "DESC"]],
 		});
 
@@ -185,8 +215,11 @@ exports.obtenerTodos = async (req, res) => {
 			})),
 			total: clientes.length,
 			tenant_info: {
-				id_tenant: id_tenant,
-				mensaje: "Clientes filtrados por empresa/tenant",
+				id_tenant: isSuperUser ? "TODOS" : id_tenant,
+				mensaje: isSuperUser
+					? "SUPERUSER - Acceso a todos los clientes"
+					: "Clientes filtrados por empresa/tenant",
+				is_superuser: isSuperUser,
 			},
 		});
 	} catch (error) {
@@ -204,15 +237,33 @@ exports.obtenerPorId = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
+
+		// Construir where clause según el rol
+		const whereClause = { id_cliente: id };
+		if (!isSuperUser) {
+			// Usuarios normales solo ven clientes de su empresa
+			whereClause.id_empresa = id_tenant;
+		}
 
 		const cliente = await Cliente.findOne({
-			where: { id_cliente: id, id_empresa: id_tenant },
+			where: whereClause,
+			include: [
+				{
+					model: Empresa,
+					as: "empresa",
+					attributes: ["id_empresa", "nombre", "nit"],
+				},
+			],
 		});
 
 		if (!cliente) {
 			return res.status(404).json({
 				success: false,
-				mensaje: "Cliente no encontrado en esta empresa",
+				mensaje: isSuperUser
+					? "Cliente no encontrado"
+					: "Cliente no encontrado en esta empresa",
 			});
 		}
 
@@ -242,16 +293,26 @@ exports.eliminar = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
 
-		// Buscar cliente en el contexto del tenant
+		// Construir where clause según el rol
+		const whereClause = { id_cliente: id };
+		if (!isSuperUser) {
+			whereClause.id_empresa = id_tenant;
+		}
+
+		// Buscar cliente
 		const cliente = await Cliente.findOne({
-			where: { id_cliente: id, id_empresa: id_tenant },
+			where: whereClause,
 		});
 
 		if (!cliente) {
 			return res.status(404).json({
 				success: false,
-				mensaje: "Cliente no encontrado en esta empresa",
+				mensaje: isSuperUser
+					? "Cliente no encontrado"
+					: "Cliente no encontrado en esta empresa",
 			});
 		}
 
@@ -294,6 +355,19 @@ exports.obtenerEliminados = async (req, res) => {
 
 		/* DESCOMENTAR DESPUÉS DE MIGRACIÓN
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
+		const { empresa_id } = req.query;
+		
+		// Construir where clause
+		let whereClause = {};
+		if (isSuperUser) {
+			if (empresa_id) {
+				whereClause.id_empresa = empresa_id;
+			}
+		} else {
+			whereClause.id_empresa = id_tenant;
+		}
 
 		// paranoid: false permite ver registros con fecha_eliminacion
 		const clientesEliminados = await Cliente.findAll({
@@ -349,6 +423,14 @@ exports.restaurar = async (req, res) => {
 		/* DESCOMENTAR DESPUÉS DE MIGRACIÓN
 		const { id } = req.params;
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
+		
+		// Construir where clause
+		const whereClause = { id_cliente: id };
+		if (!isSuperUser) {
+			whereClause.id_empresa = id_tenant;
+		}
 
 		// Buscar en eliminados
 		const cliente = await Cliente.findOne({
@@ -397,15 +479,25 @@ exports.toggle = async (req, res) => {
 	try {
 		const { id } = req.params;
 		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
+
+		// Construir where clause según el rol
+		const whereClause = { id_cliente: id };
+		if (!isSuperUser) {
+			whereClause.id_empresa = id_tenant;
+		}
 
 		const cliente = await Cliente.findOne({
-			where: { id_cliente: id, id_empresa: id_tenant },
+			where: whereClause,
 		});
 
 		if (!cliente) {
 			return res.status(404).json({
 				success: false,
-				mensaje: "Cliente no encontrado en esta empresa",
+				mensaje: isSuperUser
+					? "Cliente no encontrado"
+					: "Cliente no encontrado en esta empresa",
 			});
 		}
 

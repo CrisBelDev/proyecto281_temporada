@@ -50,4 +50,19 @@ const Cliente = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Cliente.associate = (models) => {
+	// Un cliente pertenece a una empresa
+	Cliente.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Un cliente tiene muchas ventas
+	Cliente.hasMany(models.Venta, {
+		foreignKey: "id_cliente",
+		as: "ventas",
+	});
+};
+
 module.exports = Cliente;

@@ -57,4 +57,19 @@ const Notificacion = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Notificacion.associate = (models) => {
+	// Una notificación pertenece a una empresa
+	Notificacion.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Una notificación pertenece a un usuario
+	Notificacion.belongsTo(models.Usuario, {
+		foreignKey: "id_usuario",
+		as: "usuario",
+	});
+};
+
 module.exports = Notificacion;

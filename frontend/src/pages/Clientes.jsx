@@ -1,16 +1,20 @@
 import { useState, useEffect } from "react";
-import { clientesService } from "../services";
+import { clientesService, empresasService } from "../services";
+import { useAuth } from "../context/AuthContext";
 import Modal from "../components/Modal";
 import "../styles/Clientes.css";
 
 function Clientes() {
+	const { isSuperUser } = useAuth();
 	const [clientes, setClientes] = useState([]);
+	const [empresas, setEmpresas] = useState([]);
 	const [clientesEliminados, setClientesEliminados] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modo, setModo] = useState("crear"); // 'crear' o 'editar'
 	const [clienteEditando, setClienteEditando] = useState(null);
 	const [busqueda, setBusqueda] = useState("");
+	const [empresaFiltro, setEmpresaFiltro] = useState("");
 	const [vistaActual, setVistaActual] = useState("activos"); // 'activos' o 'eliminados'
 	const [formData, setFormData] = useState({
 		nombre: "",
@@ -22,12 +26,26 @@ function Clientes() {
 
 	useEffect(() => {
 		cargarClientes();
+		if (isSuperUser()) {
+			cargarEmpresas();
+		}
 	}, []);
 
-	const cargarClientes = async (termino = "") => {
+	const cargarEmpresas = async () => {
+		try {
+			const response = await empresasService.obtenerTodas();
+			if (response.success) {
+				setEmpresas(response.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar empresas:", error);
+		}
+	};
+
+	const cargarClientes = async (termino = "", empresa = "") => {
 		try {
 			setLoading(true);
-			const response = await clientesService.obtenerTodos(termino);
+			const response = await clientesService.obtenerTodos(termino, empresa);
 			if (response.success) {
 				setClientes(response.data);
 			}
@@ -64,7 +82,13 @@ function Clientes() {
 	const handleBusqueda = (e) => {
 		const termino = e.target.value;
 		setBusqueda(termino);
-		cargarClientes(termino);
+		cargarClientes(termino, empresaFiltro);
+	};
+
+	const handleFiltroEmpresa = (e) => {
+		const empresa = e.target.value;
+		setEmpresaFiltro(empresa);
+		cargarClientes(busqueda, empresa);
 	};
 
 	const handleOpenModal = (cliente = null) => {
@@ -197,22 +221,55 @@ function Clientes() {
 			*/}
 
 			{vistaActual === "activos" && (
-				<div className="search-bar">
-					<input
-						type="text"
-						placeholder="Buscar por nombre, NIT, email o teléfono..."
-						value={busqueda}
-						onChange={handleBusqueda}
-						className="search-input"
-					/>
-				</div>
+				<>
+					{isSuperUser() && empresas.length > 0 && (
+						<div className="filter-bar">
+							<label
+								htmlFor="empresa-filter"
+								style={{ marginRight: "10px", fontWeight: "bold" }}
+							>
+								Filtrar por Empresa:
+							</label>
+							<select
+								id="empresa-filter"
+								value={empresaFiltro}
+								onChange={handleFiltroEmpresa}
+								className="select-input"
+								style={{
+									padding: "8px 12px",
+									borderRadius: "4px",
+									border: "1px solid #ddd",
+									fontSize: "14px",
+									minWidth: "250px",
+									marginBottom: "15px",
+								}}
+							>
+								<option value="">🏢 Todas las Empresas</option>
+								{empresas.map((empresa) => (
+									<option key={empresa.id_empresa} value={empresa.id_empresa}>
+										{empresa.nombre} ({empresa.nit})
+									</option>
+								))}
+							</select>
+						</div>
+					)}
+					<div className="search-bar">
+						<input
+							type="text"
+							placeholder="Buscar por nombre, NIT, email o teléfono..."
+							value={busqueda}
+							onChange={handleBusqueda}
+							className="search-input"
+						/>
+					</div>
+				</>
 			)}
 
 			<div className="table-container">
 				<table className="table">
 					<thead>
 						<tr>
-							<th>ID Empresa</th>
+							{isSuperUser() && <th>Empresa</th>}
 							<th>Nombre</th>
 							<th>NIT</th>
 							<th>Teléfono</th>
@@ -226,7 +283,10 @@ function Clientes() {
 					<tbody>
 						{clientesAMostrar.length === 0 ? (
 							<tr>
-								<td colSpan="8" style={{ textAlign: "center" }}>
+								<td
+									colSpan={isSuperUser() ? "9" : "8"}
+									style={{ textAlign: "center" }}
+								>
 									{vistaActual === "activos"
 										? "No se encontraron clientes"
 										: "No hay clientes eliminados"}
@@ -235,7 +295,15 @@ function Clientes() {
 						) : (
 							clientesAMostrar.map((cliente) => (
 								<tr key={cliente.id_cliente}>
-									<td>{cliente.id_empresa}</td>
+									{isSuperUser() && (
+										<td>
+											<strong>{cliente.empresa?.nombre || "N/A"}</strong>
+											<br />
+											<small style={{ color: "#666" }}>
+												NIT: {cliente.empresa?.nit || "-"}
+											</small>
+										</td>
+									)}
 									<td>{cliente.nombre}</td>
 									<td>{cliente.nit || "-"}</td>
 									<td>{cliente.telefono || "-"}</td>

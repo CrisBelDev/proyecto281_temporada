@@ -172,10 +172,11 @@ export const reportesService = {
 };
 
 export const clientesService = {
-	obtenerTodos: async (busqueda = "") => {
-		const response = await api.get("/clientes", {
-			params: { busqueda },
-		});
+	obtenerTodos: async (busqueda = "", empresa_id = "") => {
+		const params = {};
+		if (busqueda) params.busqueda = busqueda;
+		if (empresa_id) params.empresa_id = empresa_id;
+		const response = await api.get("/clientes", { params });
 		return response.data;
 	},
 
@@ -279,6 +280,38 @@ export const notificacionesService = {
 
 	crear: async (data) => {
 		const response = await api.post("/notificaciones", data);
+		return response.data;
+	},
+};
+
+export const empresasService = {
+	obtenerTodas: async () => {
+		const response = await api.get("/empresas");
+		return response.data;
+	},
+
+	obtenerPorId: async (id) => {
+		const response = await api.get(`/empresas/${id}`);
+		return response.data;
+	},
+
+	crear: async (data) => {
+		const response = await api.post("/empresas", data);
+		return response.data;
+	},
+
+	actualizar: async (id, data) => {
+		const response = await api.put(`/empresas/${id}`, data);
+		return response.data;
+	},
+
+	toggle: async (id) => {
+		const response = await api.patch(`/empresas/${id}/toggle`);
+		return response.data;
+	},
+
+	obtenerEstadisticas: async (id) => {
+		const response = await api.get(`/empresas/${id}/estadisticas`);
 		return response.data;
 	},
 };

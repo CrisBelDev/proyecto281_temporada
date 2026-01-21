@@ -73,4 +73,31 @@ const Producto = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Producto.associate = (models) => {
+	// Un producto pertenece a una empresa
+	Producto.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Un producto pertenece a una categoría
+	Producto.belongsTo(models.Categoria, {
+		foreignKey: "id_categoria",
+		as: "categoria",
+	});
+
+	// Un producto tiene muchos detalles de venta
+	Producto.hasMany(models.DetalleVenta, {
+		foreignKey: "id_producto",
+		as: "detalle_ventas",
+	});
+
+	// Un producto tiene muchos detalles de compra
+	Producto.hasMany(models.DetalleCompra, {
+		foreignKey: "id_producto",
+		as: "detalle_compras",
+	});
+};
+
 module.exports = Producto;

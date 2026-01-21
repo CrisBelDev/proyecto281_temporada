@@ -46,4 +46,19 @@ const Proveedor = sequelize.define(
 	},
 );
 
+// Definir asociaciones
+Proveedor.associate = (models) => {
+	// Un proveedor pertenece a una empresa
+	Proveedor.belongsTo(models.Empresa, {
+		foreignKey: "id_empresa",
+		as: "empresa",
+	});
+
+	// Un proveedor tiene muchas compras
+	Proveedor.hasMany(models.Compra, {
+		foreignKey: "id_proveedor",
+		as: "compras",
+	});
+};
+
 module.exports = Proveedor;
