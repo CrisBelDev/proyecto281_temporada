@@ -99,7 +99,7 @@ Authorization: Bearer <tu_token>
 Content-Type: application/json
 
 {
-  "password_actual": "SuperAdmin@2026",
+  "password_actual": "12345678",
   "password_nuevo": "TuNuevaPasswordSegura123!"
 }
 ```

@@ -93,7 +93,7 @@ const crearSuperusuario = async () => {
 				nombre: "Super",
 				apellido: "Usuario",
 				email: "superadmin@sistema.com",
-				password: "SuperAdmin@2026", // Se hasheará automáticamente
+				password: "12345678", // Se hasheará automáticamente
 				telefono: "+591 00000000",
 				activo: true,
 				email_verificado: true,
@@ -101,7 +101,7 @@ const crearSuperusuario = async () => {
 
 			console.log("✓ Usuario SUPERUSER creado exitosamente");
 			console.log("  📧 Email: superadmin@sistema.com");
-			console.log("  🔑 Password: SuperAdmin@2026");
+			console.log("  🔑 Password: 12345678");
 			console.log(
 				"  ⚠️  IMPORTANTE: Cambiar contraseña después del primer login",
 			);
