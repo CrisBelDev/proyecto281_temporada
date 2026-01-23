@@ -94,7 +94,10 @@ function NuevaVenta() {
 	};
 
 	const eliminarDelCarrito = (id_producto) => {
-		setCarrito(carrito.filter((item) => item.id_producto !== id_producto));
+		const item = carrito.find((i) => i.id_producto === id_producto);
+		if (confirm(`¿Eliminar "${item.nombre}" del carrito?`)) {
+			setCarrito(carrito.filter((item) => item.id_producto !== id_producto));
+		}
 	};
 
 	const calcularSubtotal = () => {
@@ -227,18 +230,52 @@ function NuevaVenta() {
 						</div>
 					) : (
 						<>
+							<div className="carrito-resumen-header">
+								<h4>📋 Detalle del Pedido</h4>
+								<button
+									type="button"
+									className="btn-vaciar-carrito"
+									onClick={() => {
+										if (confirm("¿Vaciar todo el carrito?")) {
+											setCarrito([]);
+										}
+									}}
+									title="Vaciar carrito"
+								>
+									🗑️ Vaciar
+								</button>
+							</div>
+
 							<div className="carrito-items">
-								{carrito.map((item) => (
+								{carrito.map((item, index) => (
 									<div key={item.id_producto} className="carrito-item">
-										<div className="item-info">
-											<strong>{item.nombre}</strong>
-											<p className="item-precio">
-												Bs. {parseFloat(item.precio).toFixed(2)} c/u
-											</p>
+										<div className="item-header">
+											<div className="item-numero">#{index + 1}</div>
+											<button
+												type="button"
+												className="btn-eliminar"
+												onClick={() => eliminarDelCarrito(item.id_producto)}
+												title="Eliminar del carrito"
+											>
+												✕
+											</button>
 										</div>
+
+										<div className="item-info">
+											<strong className="item-nombre">{item.nombre}</strong>
+											<div className="item-detalles">
+												<span className="item-precio-unitario">
+													Bs. {parseFloat(item.precio).toFixed(2)} c/u
+												</span>
+												<span className="item-stock-info">
+													📦 Stock: {item.stock_max}
+												</span>
+											</div>
+										</div>
+
 										<div className="item-controles">
-											<div className="cantidad-wrapper">
-												<label className="cantidad-label">Cantidad:</label>
+											<div className="cantidad-control">
+												<label>Cantidad:</label>
 												<div className="item-cantidad">
 													<button
 														type="button"
@@ -249,6 +286,7 @@ function NuevaVenta() {
 															)
 														}
 														className="btn-cantidad"
+														disabled={item.cantidad <= 1}
 													>
 														−
 													</button>
@@ -263,6 +301,7 @@ function NuevaVenta() {
 														}
 														min="1"
 														max={item.stock_max}
+														className="input-cantidad"
 													/>
 													<button
 														type="button"
@@ -273,25 +312,19 @@ function NuevaVenta() {
 															)
 														}
 														className="btn-cantidad"
+														disabled={item.cantidad >= item.stock_max}
 													>
 														+
 													</button>
 												</div>
-												<small className="stock-disponible">
-													Disponible: {item.stock_max}
-												</small>
 											</div>
-											<div className="item-subtotal">
-												Bs. {(item.precio * item.cantidad).toFixed(2)}
+
+											<div className="item-subtotal-box">
+												<span className="subtotal-label">Subtotal:</span>
+												<span className="subtotal-valor">
+													Bs. {(item.precio * item.cantidad).toFixed(2)}
+												</span>
 											</div>
-											<button
-												type="button"
-												className="btn-eliminar"
-												onClick={() => eliminarDelCarrito(item.id_producto)}
-												title="Eliminar producto"
-											>
-												🗑️
-											</button>
 										</div>
 									</div>
 								))}
