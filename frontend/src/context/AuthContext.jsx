@@ -59,6 +59,14 @@ export const AuthProvider = ({ children }) => {
 		return usuario?.rol === "SUPERUSER";
 	};
 
+	const canSell = () => {
+		return (
+			usuario?.rol === "ADMIN" ||
+			usuario?.rol === "SUPERUSER" ||
+			usuario?.rol === "VENDEDOR"
+		);
+	};
+
 	const value = {
 		usuario,
 		loading,
@@ -66,6 +74,7 @@ export const AuthProvider = ({ children }) => {
 		logout,
 		isAdmin,
 		isSuperUser,
+		canSell,
 	};
 
 	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

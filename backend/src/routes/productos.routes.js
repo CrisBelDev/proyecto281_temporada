@@ -11,15 +11,19 @@ router.use(verificarToken);
 router.get("/", productoController.obtenerProductos);
 router.get("/stock-bajo", productoController.obtenerProductosStockBajo);
 router.get("/:id", productoController.obtenerProductoPorId);
-router.post("/", verificarRol("ADMIN"), productoController.crearProducto);
+router.post(
+	"/",
+	verificarRol("ADMIN", "SUPERUSER"),
+	productoController.crearProducto,
+);
 router.put(
 	"/:id",
-	verificarRol("ADMIN"),
+	verificarRol("ADMIN", "SUPERUSER"),
 	productoController.actualizarProducto,
 );
 router.patch(
 	"/:id/toggle",
-	verificarRol("ADMIN"),
+	verificarRol("ADMIN", "SUPERUSER"),
 	productoController.toggleProducto,
 );
 

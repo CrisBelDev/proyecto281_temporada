@@ -7,10 +7,8 @@ INSERT INTO roles (nombre, descripcion)
 VALUES ('SUPERUSER', 'Super Usuario - Acceso total al sistema y gestión de empresas')
 ON CONFLICT (nombre) DO NOTHING;
 
--- 2. Crear una empresa para el superusuario (si no existe)
-INSERT INTO empresas (nombre, nit, email, activo, fecha_creacion, fecha_actualizacion)
-VALUES ('Sistema Central', 'SUPERUSER-001', 'superadmin@sistema.com', true, NOW(), NOW())
-ON CONFLICT (email) DO NOTHING;
+-- 2. El SUPERUSER NO está asociado a ninguna empresa específica
+-- Puede gestionar todas las empresas del sistema
 
 -- 3. Crear el primer usuario SUPERUSER
 -- NOTA: Debes cambiar la contraseña después del primer login
@@ -29,7 +27,7 @@ INSERT INTO usuarios (
     fecha_actualizacion
 )
 SELECT 
-    e.id_empresa,
+    NULL, -- SUPERUSER sin empresa específica
     r.id_rol,
     'Super',
     'Usuario',
@@ -39,12 +37,11 @@ SELECT
     true,
     NOW(),
     NOW()
-FROM empresas e
-CROSS JOIN roles r
-WHERE e.email = 'superadmin@sistema.com'
-  AND r.nombre = 'SUPERUSER'
-ON CONFLICT (email, id_empresa) DO UPDATE
-SET id_rol = EXCLUDED.id_rol;
+FROM roles r
+WHERE r.nombre = 'SUPERUSER'
+  AND NOT EXISTS (
+    SELECT 1 FROM usuarios WHERE email = 'superadmin@sistema.com'
+  );
 
 -- 4. Verificar la creación
 SELECT 
@@ -53,11 +50,11 @@ SELECT
     u.apellido,
     u.email,
     r.nombre as rol,
-    e.nombre as empresa,
+    COALESCE(e.nombre, 'SIN EMPRESA - GESTIONA TODAS') as empresa,
     u.activo
 FROM usuarios u
 JOIN roles r ON u.id_rol = r.id_rol
-JOIN empresas e ON u.id_empresa = e.id_empresa
+LEFT JOIN empresas e ON u.id_empresa = e.id_empresa
 WHERE r.nombre = 'SUPERUSER';
 
 -- INSTRUCCIONES:

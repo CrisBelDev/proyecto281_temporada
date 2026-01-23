@@ -149,8 +149,8 @@ exports.login = async (req, res) => {
 			});
 		}
 
-		// Verificar que la empresa esté activa
-		if (!usuario.empresa.activo) {
+		// Verificar que la empresa esté activa (no aplica para SUPERUSER sin empresa)
+		if (usuario.empresa && !usuario.empresa.activo) {
 			return res.status(401).json({
 				success: false,
 				mensaje: "Empresa inactiva. Contacte al soporte",
@@ -199,10 +199,12 @@ exports.login = async (req, res) => {
 					apellido: usuario.apellido,
 					email: usuario.email,
 					rol: usuario.rol.nombre,
-					empresa: {
-						id_empresa: usuario.empresa.id_empresa,
-						nombre: usuario.empresa.nombre,
-					},
+					empresa: usuario.empresa
+						? {
+								id_empresa: usuario.empresa.id_empresa,
+								nombre: usuario.empresa.nombre,
+							}
+						: null,
 				},
 			},
 		});
@@ -243,10 +245,12 @@ exports.verificarToken = async (req, res) => {
 					apellido: usuario.apellido,
 					email: usuario.email,
 					rol: usuario.rol.nombre,
-					empresa: {
-						id_empresa: usuario.empresa.id_empresa,
-						nombre: usuario.empresa.nombre,
-					},
+					empresa: usuario.empresa
+						? {
+								id_empresa: usuario.empresa.id_empresa,
+								nombre: usuario.empresa.nombre,
+							}
+						: null,
 				},
 			},
 		});

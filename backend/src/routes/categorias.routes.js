@@ -11,15 +11,19 @@ router.use(verificarToken);
 router.get("/", categoriaController.obtenerCategorias);
 router.get("/con-productos", categoriaController.obtenerCategoriasConProductos);
 router.get("/:id", categoriaController.obtenerCategoriaPorId);
-router.post("/", verificarRol("ADMIN"), categoriaController.crearCategoria);
+router.post(
+	"/",
+	verificarRol("ADMIN", "SUPERUSER"),
+	categoriaController.crearCategoria,
+);
 router.put(
 	"/:id",
-	verificarRol("ADMIN"),
+	verificarRol("ADMIN", "SUPERUSER"),
 	categoriaController.actualizarCategoria,
 );
 router.delete(
 	"/:id",
-	verificarRol("ADMIN"),
+	verificarRol("ADMIN", "SUPERUSER"),
 	categoriaController.eliminarCategoria,
 );
 

@@ -1,20 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { productosService, ventasService } from "../services";
+import { productosService, ventasService, clientesService } from "../services";
 import "../styles/NuevaVenta.css";
 
 function NuevaVenta() {
 	const navigate = useNavigate();
 	const [productos, setProductos] = useState([]);
+	const [clientes, setClientes] = useState([]);
 	const [carrito, setCarrito] = useState([]);
+	const [busquedaProducto, setBusquedaProducto] = useState("");
 	const [formData, setFormData] = useState({
+		id_cliente: "",
 		metodo_pago: "EFECTIVO",
 		descuento: 0,
+		observaciones: "",
 	});
 	const [loading, setLoading] = useState(false);
 
 	useEffect(() => {
 		cargarProductos();
+		cargarClientes();
 	}, []);
 
 	const cargarProductos = async () => {
@@ -27,6 +32,17 @@ function NuevaVenta() {
 			}
 		} catch (error) {
 			console.error("Error al cargar productos:", error);
+		}
+	};
+
+	const cargarClientes = async () => {
+		try {
+			const response = await clientesService.obtenerTodos();
+			if (response.success) {
+				setClientes(response.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar clientes:", error);
 		}
 	};
 
@@ -99,8 +115,10 @@ function NuevaVenta() {
 		setLoading(true);
 		try {
 			const data = {
+				id_cliente: formData.id_cliente || undefined,
 				metodo_pago: formData.metodo_pago,
 				descuento: parseFloat(formData.descuento || 0),
+				observaciones: formData.observaciones || undefined,
 				productos: carrito.map((item) => ({
 					id_producto: item.id_producto,
 					cantidad: item.cantidad,
@@ -109,8 +127,8 @@ function NuevaVenta() {
 
 			const response = await ventasService.crear(data);
 			if (response.success) {
-				alert("Venta registrada exitosamente");
-				navigate("/ventas");
+				alert("✅ Venta registrada exitosamente");
+				navigate("/admin/ventas");
 			}
 		} catch (error) {
 			alert(error.response?.data?.mensaje || "Error al registrar venta");
@@ -119,44 +137,94 @@ function NuevaVenta() {
 		}
 	};
 
+	const productosFiltrados = productos.filter(
+		(p) =>
+			p.nombre.toLowerCase().includes(busquedaProducto.toLowerCase()) ||
+			p.codigo.toLowerCase().includes(busquedaProducto.toLowerCase()),
+	);
+
 	return (
 		<div className="nueva-venta-page">
 			<div className="page-header">
-				<h1>Nueva Venta</h1>
+				<div>
+					<h1>🛒 Nueva Venta</h1>
+					<p className="page-subtitle">
+						Selecciona productos y completa la venta
+					</p>
+				</div>
 				<button
-					onClick={() => navigate("/ventas")}
+					onClick={() => navigate("/admin/ventas")}
 					className="btn btn-secondary"
 				>
-					Volver
+					← Volver
 				</button>
 			</div>
 
 			<div className="venta-container">
-				<div className="productos-seleccion">
-					<h3>Seleccionar Productos</h3>
+				{/* Panel izquierdo - Productos */}
+				<div className="productos-panel">
+					<div className="panel-header">
+						<h3>📦 Productos Disponibles</h3>
+						<div className="busqueda-productos">
+							<input
+								type="text"
+								placeholder="🔍 Buscar producto..."
+								value={busquedaProducto}
+								onChange={(e) => setBusquedaProducto(e.target.value)}
+								className="input-busqueda"
+							/>
+						</div>
+					</div>
 					<div className="productos-grid">
-						{productos.map((producto) => (
-							<div
-								key={producto.id_producto}
-								className="producto-card"
-								onClick={() => agregarAlCarrito(producto)}
-							>
-								<h4>{producto.nombre}</h4>
-								<p className="producto-codigo">{producto.codigo}</p>
-								<p className="producto-precio">
-									Bs. {parseFloat(producto.precio_venta).toFixed(2)}
-								</p>
-								<p className="producto-stock">Stock: {producto.stock_actual}</p>
-							</div>
-						))}
+						{productosFiltrados.length === 0 ? (
+							<p className="no-productos">No hay productos disponibles</p>
+						) : (
+							productosFiltrados.map((producto) => (
+								<div
+									key={producto.id_producto}
+									className="producto-card"
+									onClick={() => agregarAlCarrito(producto)}
+								>
+									<div className="producto-header">
+										<h4>{producto.nombre}</h4>
+										<span className="producto-codigo">{producto.codigo}</span>
+									</div>
+									<div className="producto-body">
+										<div className="producto-precio">
+											<span className="precio-label">Precio:</span>
+											<span className="precio-valor">
+												Bs. {parseFloat(producto.precio_venta).toFixed(2)}
+											</span>
+										</div>
+										<div className="producto-stock">
+											<span className="stock-icon">📊</span>
+											<span>Stock: {producto.stock_actual}</span>
+										</div>
+									</div>
+									<div className="producto-footer">
+										<button className="btn-agregar">+ Agregar</button>
+									</div>
+								</div>
+							))
+						)}
 					</div>
 				</div>
 
-				<div className="carrito-venta">
-					<h3>Carrito de Venta</h3>
+				{/* Panel derecho - Carrito y Resumen */}
+				<div className="carrito-panel">
+					<div className="carrito-header">
+						<h3>🛍️ Carrito de Compra</h3>
+						{carrito.length > 0 && (
+							<span className="items-count">{carrito.length} items</span>
+						)}
+					</div>
 
 					{carrito.length === 0 ? (
-						<p className="carrito-vacio">No hay productos en el carrito</p>
+						<div className="carrito-vacio">
+							<div className="vacio-icon">🛒</div>
+							<p>No hay productos en el carrito</p>
+							<small>Selecciona productos de la izquierda</small>
+						</div>
 					) : (
 						<>
 							<div className="carrito-items">
@@ -164,106 +232,177 @@ function NuevaVenta() {
 									<div key={item.id_producto} className="carrito-item">
 										<div className="item-info">
 											<strong>{item.nombre}</strong>
-											<p>Bs. {parseFloat(item.precio).toFixed(2)}</p>
+											<p className="item-precio">
+												Bs. {parseFloat(item.precio).toFixed(2)} c/u
+											</p>
 										</div>
-										<div className="item-cantidad">
+										<div className="item-controles">
+											<div className="cantidad-wrapper">
+												<label className="cantidad-label">Cantidad:</label>
+												<div className="item-cantidad">
+													<button
+														type="button"
+														onClick={() =>
+															actualizarCantidad(
+																item.id_producto,
+																item.cantidad - 1,
+															)
+														}
+														className="btn-cantidad"
+													>
+														−
+													</button>
+													<input
+														type="number"
+														value={item.cantidad}
+														onChange={(e) =>
+															actualizarCantidad(
+																item.id_producto,
+																parseInt(e.target.value) || 1,
+															)
+														}
+														min="1"
+														max={item.stock_max}
+													/>
+													<button
+														type="button"
+														onClick={() =>
+															actualizarCantidad(
+																item.id_producto,
+																item.cantidad + 1,
+															)
+														}
+														className="btn-cantidad"
+													>
+														+
+													</button>
+												</div>
+												<small className="stock-disponible">
+													Disponible: {item.stock_max}
+												</small>
+											</div>
+											<div className="item-subtotal">
+												Bs. {(item.precio * item.cantidad).toFixed(2)}
+											</div>
 											<button
-												onClick={() =>
-													actualizarCantidad(
-														item.id_producto,
-														item.cantidad - 1,
-													)
-												}
+												type="button"
+												className="btn-eliminar"
+												onClick={() => eliminarDelCarrito(item.id_producto)}
+												title="Eliminar producto"
 											>
-												-
-											</button>
-											<input
-												type="number"
-												value={item.cantidad}
-												onChange={(e) =>
-													actualizarCantidad(
-														item.id_producto,
-														parseInt(e.target.value),
-													)
-												}
-												min="1"
-												max={item.stock_max}
-											/>
-											<button
-												onClick={() =>
-													actualizarCantidad(
-														item.id_producto,
-														item.cantidad + 1,
-													)
-												}
-											>
-												+
+												🗑️
 											</button>
 										</div>
-										<div className="item-subtotal">
-											Bs. {(item.precio * item.cantidad).toFixed(2)}
-										</div>
-										<button
-											className="btn-eliminar"
-											onClick={() => eliminarDelCarrito(item.id_producto)}
-										>
-											🗑️
-										</button>
 									</div>
 								))}
 							</div>
 
 							<form onSubmit={handleSubmit} className="venta-form">
-								<div className="form-group">
-									<label>Método de Pago</label>
-									<select
-										value={formData.metodo_pago}
-										onChange={(e) =>
-											setFormData({ ...formData, metodo_pago: e.target.value })
-										}
-									>
-										<option value="EFECTIVO">Efectivo</option>
-										<option value="QR">QR</option>
-										<option value="TARJETA">Tarjeta</option>
-									</select>
+								{/* Información del Cliente */}
+								<div className="form-section">
+									<h4>👤 Información del Cliente</h4>
+									<div className="form-group">
+										<label>Cliente (Opcional)</label>
+										<select
+											value={formData.id_cliente}
+											onChange={(e) =>
+												setFormData({ ...formData, id_cliente: e.target.value })
+											}
+										>
+											<option value="">Venta sin cliente registrado</option>
+											{clientes.map((cliente) => (
+												<option
+													key={cliente.id_cliente}
+													value={cliente.id_cliente}
+												>
+													{cliente.nombre} {cliente.apellido}{" "}
+													{cliente.ci ? `- CI: ${cliente.ci}` : ""}
+												</option>
+											))}
+										</select>
+									</div>
 								</div>
 
-								<div className="form-group">
-									<label>Descuento (Bs.)</label>
-									<input
-										type="number"
-										step="0.01"
-										min="0"
-										value={formData.descuento}
-										onChange={(e) =>
-											setFormData({ ...formData, descuento: e.target.value })
-										}
-									/>
+								{/* Detalles de Pago */}
+								<div className="form-section">
+									<h4>💳 Detalles de Pago</h4>
+									<div className="form-group">
+										<label>Método de Pago</label>
+										<select
+											value={formData.metodo_pago}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													metodo_pago: e.target.value,
+												})
+											}
+										>
+											<option value="EFECTIVO">💵 Efectivo</option>
+											<option value="QR">📱 QR</option>
+											<option value="TARJETA">💳 Tarjeta</option>
+											<option value="TRANSFERENCIA">🏦 Transferencia</option>
+										</select>
+									</div>
+
+									<div className="form-group">
+										<label>Descuento (Bs.)</label>
+										<input
+											type="number"
+											step="0.01"
+											min="0"
+											max={calcularSubtotal()}
+											value={formData.descuento}
+											onChange={(e) =>
+												setFormData({ ...formData, descuento: e.target.value })
+											}
+											placeholder="0.00"
+										/>
+									</div>
+
+									<div className="form-group">
+										<label>Observaciones</label>
+										<textarea
+											value={formData.observaciones}
+											onChange={(e) =>
+												setFormData({
+													...formData,
+													observaciones: e.target.value,
+												})
+											}
+											placeholder="Notas adicionales sobre la venta..."
+											rows="2"
+										/>
+									</div>
 								</div>
 
+								{/* Resumen de Totales */}
 								<div className="venta-totales">
 									<div className="total-row">
 										<span>Subtotal:</span>
 										<strong>Bs. {calcularSubtotal().toFixed(2)}</strong>
 									</div>
-									<div className="total-row">
-										<span>Descuento:</span>
-										<strong>
-											Bs. {parseFloat(formData.descuento || 0).toFixed(2)}
-										</strong>
-									</div>
+									{parseFloat(formData.descuento || 0) > 0 && (
+										<div className="total-row descuento-row">
+											<span>Descuento:</span>
+											<strong className="descuento">
+												- Bs. {parseFloat(formData.descuento || 0).toFixed(2)}
+											</strong>
+										</div>
+									)}
 									<div className="total-row total-final">
-										<span>TOTAL:</span>
-										<strong>Bs. {calcularTotal().toFixed(2)}</strong>
+										<span>TOTAL A PAGAR:</span>
+										<strong className="total-amount">
+											Bs. {calcularTotal().toFixed(2)}
+										</strong>
 									</div>
 								</div>
 
 								<button
 									type="submit"
-									className="btn btn-primary btn-block"
+									className="btn btn-primary btn-block btn-finalizar"
 									disabled={loading}
 								>
-									{loading ? "Procesando..." : "Registrar Venta"}
+									{loading ? "Procesando..." : "✅ Finalizar Venta"}
 								</button>
 							</form>
 						</>

@@ -4,10 +4,21 @@
 
 Se ha implementado exitosamente el rol **SUPERUSER** con las siguientes capacidades:
 
-✅ **Gestión completa de empresas**
+✅ **NO está asociado a ninguna empresa específica** (id_empresa = NULL)
+✅ **Gestión completa de TODAS las empresas del sistema**
 ✅ **Gestión de usuarios de todas las empresas**
-✅ **Acceso sin restricciones multi-tenant**
+✅ **Selección dinámica de empresa** mediante query params, headers o body
 ✅ **Puede crear otros SUPERUSERS**
+
+## ⚠️ IMPORTANTE - CAMBIO FUNDAMENTAL
+
+El SUPERUSER ahora funciona de manera diferente:
+
+- **NO tiene empresa asignada** en la base de datos (`id_empresa = NULL`)
+- **Debe especificar la empresa** con la que quiere trabajar en cada operación
+- **Puede ver datos de todas las empresas** cuando no especifica empresa_id
+
+Para más detalles, consulta: [SUPERUSER_SIN_EMPRESA.md](SUPERUSER_SIN_EMPRESA.md)
 
 ## 📝 Pasos para Activar el Sistema
 

@@ -10,7 +10,15 @@ router.use(verificarToken);
 // Rutas de ventas
 router.get("/", ventaController.obtenerVentas);
 router.get("/:id", ventaController.obtenerVentaPorId);
-router.post("/", verificarRol("ADMIN", "VENDEDOR"), ventaController.crearVenta);
-router.patch("/:id/anular", verificarRol("ADMIN"), ventaController.anularVenta);
+router.post(
+	"/",
+	verificarRol("ADMIN", "VENDEDOR", "SUPERUSER"),
+	ventaController.crearVenta,
+);
+router.patch(
+	"/:id/anular",
+	verificarRol("ADMIN", "SUPERUSER"),
+	ventaController.anularVenta,
+);
 
 module.exports = router;

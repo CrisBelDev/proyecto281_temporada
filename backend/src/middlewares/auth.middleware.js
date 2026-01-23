@@ -36,9 +36,10 @@ const verificarToken = (req, res, next) => {
 			}
 
 			// Guardar información del usuario en el request
+			// SUPERUSER no tiene id_empresa (es null) y puede gestionar todas las empresas
 			req.usuario = {
 				id_usuario: decoded.id_usuario,
-				id_empresa: decoded.id_empresa,
+				id_empresa: decoded.id_empresa, // null para SUPERUSER
 				id_rol: decoded.id_rol,
 				nombre_rol: decoded.nombre_rol,
 				email: decoded.email,

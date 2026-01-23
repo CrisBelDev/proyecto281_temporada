@@ -10,10 +10,14 @@ router.use(verificarToken);
 // Rutas de compras
 router.get("/", compraController.obtenerCompras);
 router.get("/:id", compraController.obtenerCompraPorId);
-router.post("/", verificarRol("ADMIN"), compraController.crearCompra);
+router.post(
+	"/",
+	verificarRol("ADMIN", "SUPERUSER"),
+	compraController.crearCompra,
+);
 router.patch(
 	"/:id/anular",
-	verificarRol("ADMIN"),
+	verificarRol("ADMIN", "SUPERUSER"),
 	compraController.anularCompra,
 );
 

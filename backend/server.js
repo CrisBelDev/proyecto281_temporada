@@ -1,3 +1,4 @@
+// Configuración del servidor - SUPERUSER gestiona TODAS las empresas
 require("dotenv").config();
 const app = require("./src/app");
 const sequelize = require("./src/config/database");
@@ -74,31 +75,20 @@ const crearSuperusuario = async () => {
 			return;
 		}
 
-		// Buscar o crear la empresa del sistema
-		const [empresaSistema] = await Empresa.findOrCreate({
-			where: { email: "superadmin@sistema.com" },
-			defaults: {
-				nombre: "Sistema Central",
-				nit: "SUPERUSER-001",
-				email: "superadmin@sistema.com",
-				telefono: "+591 00000000",
-				direccion: "Sistema Central",
-				activo: true,
-			},
-		});
+		// El SUPERUSER no está asociado a ninguna empresa específica
+		// Puede gestionar todas las empresas del sistema
 
 		// Verificar si ya existe el usuario SUPERUSER
 		const usuarioExistente = await Usuario.findOne({
 			where: {
 				email: "superadmin@sistema.com",
-				id_empresa: empresaSistema.id_empresa,
 			},
 		});
 
 		if (!usuarioExistente) {
-			// Crear el usuario SUPERUSER
+			// Crear el usuario SUPERUSER sin empresa asignada
 			await Usuario.create({
-				id_empresa: empresaSistema.id_empresa,
+				id_empresa: null, // SUPERUSER no tiene empresa específica
 				id_rol: rolSuperuser.id_rol,
 				nombre: "Super",
 				apellido: "Usuario",

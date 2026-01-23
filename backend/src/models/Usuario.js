@@ -12,7 +12,7 @@ const Usuario = sequelize.define(
 		},
 		id_empresa: {
 			type: DataTypes.INTEGER,
-			allowNull: false,
+			allowNull: true, // NULL para SUPERUSER que no está asociado a ninguna empresa específica
 			references: {
 				model: "empresas",
 				key: "id_empresa",

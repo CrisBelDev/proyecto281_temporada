@@ -11,7 +11,7 @@ router.use(verificarToken);
 router.get("/", notificacionController.obtenerNotificaciones);
 router.post(
 	"/",
-	verificarRol("ADMIN"),
+	verificarRol("ADMIN", "SUPERUSER"),
 	notificacionController.crearNotificacion,
 );
 router.patch("/:id/leida", notificacionController.marcarComoLeida);

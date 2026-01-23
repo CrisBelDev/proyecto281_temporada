@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { ventasService } from "../services";
 import { useAuth } from "../context/AuthContext";
+import ModalNuevaVenta from "../components/ModalNuevaVenta";
 import "../styles/Ventas.css";
 
 function Ventas() {
-	const { isAdmin } = useAuth();
+	const { isAdmin, canSell } = useAuth();
 	const [ventas, setVentas] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const [modalNuevaVentaAbierto, setModalNuevaVentaAbierto] = useState(false);
 
 	useEffect(() => {
 		cargarVentas();
@@ -54,10 +55,21 @@ function Ventas() {
 		<div className="ventas-page">
 			<div className="page-header">
 				<h1>Ventas</h1>
-				<Link to="/ventas/nueva" className="btn btn-primary">
-					+ Nueva Venta
-				</Link>
+				{canSell() && (
+					<button
+						onClick={() => setModalNuevaVentaAbierto(true)}
+						className="btn btn-primary"
+					>
+						+ Nueva Venta
+					</button>
+				)}
 			</div>
+
+			<ModalNuevaVenta
+				isOpen={modalNuevaVentaAbierto}
+				onClose={() => setModalNuevaVentaAbierto(false)}
+				onVentaCreada={cargarVentas}
+			/>
 
 			<div className="table-container">
 				<table className="table">
