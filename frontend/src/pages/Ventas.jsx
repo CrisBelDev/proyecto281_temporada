@@ -35,11 +35,46 @@ function Ventas() {
 		) {
 			try {
 				await ventasService.anular(id);
-				cargarVentas();
+				await cargarVentas();
 				alert("Venta anulada exitosamente");
 			} catch (error) {
 				alert(error.response?.data?.mensaje || "Error al anular venta");
 			}
+		}
+	};
+
+	const handleDescargarFactura = async (id, numero_venta) => {
+		try {
+			const token = localStorage.getItem("token");
+
+			const response = await fetch(
+				`http://localhost:3000/api/ventas/${id}/factura/pdf`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.mensaje || "Error al descargar factura");
+			}
+
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `factura-${numero_venta}.pdf`;
+			document.body.appendChild(a);
+			a.click();
+
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+		} catch (error) {
+			alert(error.message || "Error al descargar factura");
+			console.error("Error:", error);
 		}
 	};
 
@@ -102,22 +137,44 @@ function Ventas() {
 								<td>{venta.metodo_pago}</td>
 								<td>
 									<span
-										className={`badge ${venta.estado === "COMPLETADA" ? "badge-success" : "badge-danger"}`}
+										className={`badge ${
+											venta.estado === "COMPLETADA"
+												? "badge-success"
+												: "badge-danger"
+										}`}
 									>
 										{venta.estado}
 									</span>
 								</td>
+
 								{isAdmin() && (
 									<td>
-										{venta.estado === "COMPLETADA" && (
-											<button
-												onClick={() => handleAnular(venta.id_venta)}
-												className="btn-icon"
-												title="Anular"
-											>
-												❌
-											</button>
-										)}
+										<div className="acciones-venta">
+											{venta.estado === "COMPLETADA" && (
+												<>
+													<button
+														onClick={() =>
+															handleDescargarFactura(
+																venta.id_venta,
+																venta.numero_venta,
+															)
+														}
+														className="btn-icon btn-pdf"
+														title="Descargar Factura PDF"
+													>
+														📄
+													</button>
+
+													<button
+														onClick={() => handleAnular(venta.id_venta)}
+														className="btn-icon btn-danger"
+														title="Anular"
+													>
+														❌
+													</button>
+												</>
+											)}
+										</div>
 									</td>
 								)}
 							</tr>

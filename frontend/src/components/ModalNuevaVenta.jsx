@@ -93,6 +93,38 @@ function ModalNuevaVenta({ isOpen, onClose, onVentaCreada }) {
 
 		const res = await ventasService.crear(data);
 		if (res.success) {
+			// Descargar automáticamente la factura PDF
+			try {
+				const token = localStorage.getItem("token");
+				const ventaId = res.data.id_venta;
+				const numeroVenta = res.data.numero_venta;
+
+				const response = await fetch(
+					`http://localhost:3000/api/ventas/${ventaId}/factura/pdf`,
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+
+				if (response.ok) {
+					const blob = await response.blob();
+					const url = window.URL.createObjectURL(blob);
+					const a = document.createElement("a");
+					a.href = url;
+					a.download = `factura-${numeroVenta}.pdf`;
+					document.body.appendChild(a);
+					a.click();
+					window.URL.revokeObjectURL(url);
+					document.body.removeChild(a);
+				}
+			} catch (error) {
+				console.error("Error al descargar factura:", error);
+				// No bloqueamos el flujo si falla la descarga del PDF
+			}
+
+			alert("✅ Venta registrada exitosamente");
 			onVentaCreada();
 			onClose();
 			setCarrito([]);
