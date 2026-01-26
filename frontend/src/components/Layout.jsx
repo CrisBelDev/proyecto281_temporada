@@ -50,24 +50,31 @@ function Layout() {
 					>
 						👤 Clientes
 					</NavLink>
-					<NavLink
-						to="/admin/ventas"
-						className={({ isActive }) => (isActive ? "active" : "")}
-					>
-						💰 Ventas
-					</NavLink>
-					<NavLink
-						to="/admin/compras"
-						className={({ isActive }) => (isActive ? "active" : "")}
-					>
-						🛒 Compras
-					</NavLink>
-					<NavLink
-						to="/admin/reportes"
-						className={({ isActive }) => (isActive ? "active" : "")}
-					>
-						📈 Reportes
-					</NavLink>
+
+					{/* Módulos operativos - Solo para usuarios de empresas (NO SUPERUSER) */}
+					{!isSuperUser() && (
+						<>
+							<NavLink
+								to="/admin/ventas"
+								className={({ isActive }) => (isActive ? "active" : "")}
+							>
+								💰 Ventas
+							</NavLink>
+							<NavLink
+								to="/admin/compras"
+								className={({ isActive }) => (isActive ? "active" : "")}
+							>
+								🛒 Compras
+							</NavLink>
+							<NavLink
+								to="/admin/reportes"
+								className={({ isActive }) => (isActive ? "active" : "")}
+							>
+								📈 Reportes
+							</NavLink>
+						</>
+					)}
+
 					{isSuperUser() && (
 						<NavLink
 							to="/admin/empresas"
