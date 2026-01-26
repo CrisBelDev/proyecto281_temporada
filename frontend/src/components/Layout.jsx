@@ -61,6 +61,12 @@ function Layout() {
 								💰 Ventas
 							</NavLink>
 							<NavLink
+								to="/admin/proveedores"
+								className={({ isActive }) => (isActive ? "active" : "")}
+							>
+								📦 Proveedores
+							</NavLink>
+							<NavLink
 								to="/admin/compras"
 								className={({ isActive }) => (isActive ? "active" : "")}
 							>

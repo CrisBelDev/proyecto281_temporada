@@ -98,6 +98,12 @@ Producto.associate = (models) => {
 		foreignKey: "id_producto",
 		as: "detalle_compras",
 	});
+
+	// Relación con proveedores a través de ProveedorProducto
+	Producto.hasMany(models.ProveedorProducto, {
+		foreignKey: "id_producto",
+		as: "proveedores",
+	});
 };
 
 module.exports = Producto;

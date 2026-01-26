@@ -9,6 +9,7 @@ const Cliente = require("./src/models/Cliente");
 const Categoria = require("./src/models/Categoria");
 const Producto = require("./src/models/Producto");
 const Proveedor = require("./src/models/Proveedor");
+const ProveedorProducto = require("./src/models/ProveedorProducto");
 const Venta = require("./src/models/Venta");
 const DetalleVenta = require("./src/models/DetalleVenta");
 const Compra = require("./src/models/Compra");
@@ -26,6 +27,7 @@ const models = {
 	Categoria,
 	Producto,
 	Proveedor,
+	ProveedorProducto,
 	Venta,
 	DetalleVenta,
 	Compra,

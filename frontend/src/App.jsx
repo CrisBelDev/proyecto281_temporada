@@ -29,6 +29,7 @@ import Reportes from "./pages/Reportes";
 import Clientes from "./pages/Clientes";
 import Empresas from "./pages/Empresas";
 import PortalProductos from "./pages/PortalProductos";
+import Proveedores from "./pages/Proveedores";
 
 function App() {
 	return (
@@ -69,7 +70,8 @@ function App() {
 						<Route path="productos" element={<Productos />} />
 						<Route path="categorias" element={<Categorias />} />
 						<Route path="notificaciones" element={<Notificaciones />} />
-						<Route path="clientes" element={<Clientes />} />
+						<Route path="clientes" element={<Clientes />} />{" "}
+						<Route path="proveedores" element={<Proveedores />} />{" "}
 						<Route path="ventas" element={<Ventas />} />
 						<Route path="ventas/nueva" element={<NuevaVenta />} />
 						<Route path="compras" element={<Compras />} />

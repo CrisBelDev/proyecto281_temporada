@@ -33,6 +33,23 @@ const Proveedor = sequelize.define(
 		direccion: {
 			type: DataTypes.STRING(300),
 		},
+		contacto_nombre: {
+			type: DataTypes.STRING(200),
+			allowNull: true,
+		},
+		contacto_telefono: {
+			type: DataTypes.STRING(20),
+			allowNull: true,
+		},
+		datos_pago: {
+			type: DataTypes.TEXT,
+			allowNull: true,
+			comment: "JSON con información de pago (banco, cuenta, etc.)",
+		},
+		observaciones: {
+			type: DataTypes.TEXT,
+			allowNull: true,
+		},
 		activo: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: true,
@@ -58,6 +75,12 @@ Proveedor.associate = (models) => {
 	Proveedor.hasMany(models.Compra, {
 		foreignKey: "id_proveedor",
 		as: "compras",
+	});
+
+	// Relación con productos a través de ProveedorProducto
+	Proveedor.hasMany(models.ProveedorProducto, {
+		foreignKey: "id_proveedor",
+		as: "productos_suministrados",
 	});
 };
 

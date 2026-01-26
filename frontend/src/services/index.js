@@ -317,3 +317,50 @@ export const empresasService = {
 		return response.data;
 	},
 };
+
+export const proveedoresService = {
+	obtenerTodos: async (params = {}) => {
+		const response = await api.get("/proveedores", { params });
+		return response.data.data;
+	},
+
+	obtenerPorId: async (id) => {
+		const response = await api.get(`/proveedores/${id}`);
+		return response.data.data;
+	},
+
+	crear: async (data) => {
+		const response = await api.post("/proveedores", data);
+		return response.data.data;
+	},
+
+	actualizar: async (id, data) => {
+		const response = await api.put(`/proveedores/${id}`, data);
+		return response.data.data;
+	},
+
+	toggleActivo: async (id) => {
+		const response = await api.patch(`/proveedores/${id}/toggle`);
+		return response.data.data;
+	},
+
+	agregarProducto: async (idProveedor, data) => {
+		const response = await api.post(
+			`/proveedores/${idProveedor}/productos`,
+			data,
+		);
+		return response.data.data;
+	},
+
+	toggleProducto: async (idProveedor, idProducto) => {
+		const response = await api.patch(
+			`/proveedores/${idProveedor}/productos/${idProducto}/toggle`,
+		);
+		return response.data.data;
+	},
+
+	obtenerHistorialCompras: async (idProveedor) => {
+		const response = await api.get(`/proveedores/${idProveedor}/compras`);
+		return response.data.data;
+	},
+};

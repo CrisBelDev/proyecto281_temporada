@@ -1,0 +1,303 @@
+.proveedores-container {
+	padding: 2rem;
+	max-width: 1400px;
+	margin: 0 auto;
+}
+
+.proveedores-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+}
+
+.header-left h1 {
+	font-size: 2rem;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	margin-bottom: 0.5rem;
+}
+
+.subtitle {
+	color: #666;
+	font-size: 0.9rem;
+}
+
+.btn-nuevo-proveedor {
+	padding: 0.75rem 1.5rem;
+	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.3s;
+	box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-nuevo-proveedor:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.filtro-empresa {
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background: linear-gradient(
+		135deg,
+		rgba(102, 126, 234, 0.1) 0%,
+		rgba(118, 75, 162, 0.1) 100%
+	);
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.filtro-empresa label {
+	font-weight: 600;
+	color: #667eea;
+}
+
+.empresa-selector {
+	flex: 1;
+	padding: 0.75rem;
+	border: 2px solid #667eea;
+	border-radius: 8px;
+	font-size: 1rem;
+	background: white;
+	cursor: pointer;
+	transition: all 0.3s;
+}
+
+.empresa-selector:focus {
+	outline: none;
+	border-color: #764ba2;
+	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.proveedores-filters {
+	margin-bottom: 2rem;
+}
+
+.search-box input {
+	width: 100%;
+	padding: 0.75rem 1rem;
+	border: 2px solid #e0e0e0;
+	border-radius: 8px;
+	font-size: 1rem;
+	transition: all 0.3s;
+}
+
+.search-box input:focus {
+	outline: none;
+	border-color: #667eea;
+	box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.loading,
+.no-data {
+	text-align: center;
+	padding: 3rem;
+	color: #666;
+	font-size: 1.1rem;
+}
+
+.proveedores-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+	gap: 1.5rem;
+}
+
+.proveedor-card {
+	background: white;
+	border-radius: 12px;
+	padding: 1.5rem;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+	transition: all 0.3s;
+}
+
+.proveedor-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+}
+
+.proveedor-card.inactivo {
+	opacity: 0.6;
+	background: #f5f5f5;
+}
+
+.proveedor-header-card {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 1rem;
+	padding-bottom: 1rem;
+	border-bottom: 2px solid #f0f0f0;
+}
+
+.proveedor-header-card h3 {
+	font-size: 1.3rem;
+	color: #333;
+	margin: 0;
+}
+
+.badge {
+	padding: 0.25rem 0.75rem;
+	border-radius: 20px;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.badge.activo {
+	background: #d4edda;
+	color: #155724;
+}
+
+.badge.inactivo {
+	background: #f8d7da;
+	color: #721c24;
+}
+
+.proveedor-info {
+	margin-bottom: 1rem;
+}
+
+.info-item {
+	margin-bottom: 0.75rem;
+	font-size: 0.9rem;
+	color: #555;
+	line-height: 1.5;
+}
+
+.info-item strong {
+	color: #333;
+	display: inline-block;
+	min-width: 100px;
+}
+
+.info-item.contacto {
+	background: #f8f9fa;
+	padding: 0.5rem;
+	border-radius: 6px;
+	border-left: 3px solid #667eea;
+}
+
+.info-item.pago {
+	background: #fff3cd;
+	padding: 0.5rem;
+	border-radius: 6px;
+	border-left: 3px solid #ffc107;
+}
+
+.datos-pago-mini {
+	margin-top: 0.25rem;
+	padding-left: 1rem;
+	font-size: 0.85rem;
+}
+
+.datos-pago-mini span {
+	display: block;
+	color: #666;
+}
+
+.info-item.productos-count {
+	background: #e7f3ff;
+	padding: 0.5rem;
+	border-radius: 6px;
+	border-left: 3px solid #2196f3;
+	font-weight: 600;
+	color: #1976d2;
+}
+
+.proveedor-actions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+}
+
+.btn-action {
+	flex: 1;
+	min-width: 80px;
+	padding: 0.5rem;
+	border: none;
+	border-radius: 6px;
+	cursor: pointer;
+	font-weight: 600;
+	transition: all 0.3s;
+	font-size: 0.85rem;
+}
+
+.btn-productos {
+	background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+	color: white;
+}
+
+.btn-productos:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+}
+
+.btn-historial {
+	background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+	color: white;
+}
+
+.btn-historial:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(255, 152, 0, 0.3);
+}
+
+.btn-editar {
+	background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+	color: white;
+	flex: 0;
+	min-width: 50px;
+}
+
+.btn-editar:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+}
+
+.btn-desactivar {
+	background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+	color: white;
+	flex: 0;
+	min-width: 50px;
+}
+
+.btn-desactivar:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(244, 67, 54, 0.3);
+}
+
+.btn-activar {
+	background: linear-gradient(135deg, #8bc34a 0%, #689f38 100%);
+	color: white;
+	flex: 0;
+	min-width: 50px;
+}
+
+.btn-activar:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 10px rgba(139, 195, 74, 0.3);
+}
+
+@media (max-width: 768px) {
+	.proveedores-grid {
+		grid-template-columns: 1fr;
+	}
+
+	.proveedores-header {
+		flex-direction: column;
+		gap: 1rem;
+		align-items: stretch;
+	}
+
+	.filtro-empresa {
+		flex-direction: column;
+		align-items: stretch;
+	}
+}

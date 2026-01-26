@@ -10,6 +10,7 @@ const Categoria = require("./models/Categoria");
 const Producto = require("./models/Producto");
 const Cliente = require("./models/Cliente");
 const Proveedor = require("./models/Proveedor");
+const ProveedorProducto = require("./models/ProveedorProducto");
 const Venta = require("./models/Venta");
 const DetalleVenta = require("./models/DetalleVenta");
 const Compra = require("./models/Compra");
@@ -28,6 +29,7 @@ const reportesRoutes = require("./routes/reportes.routes");
 const clientesRoutes = require("./routes/clientes.routes");
 const empresasRoutes = require("./routes/empresas.routes");
 const portalRoutes = require("./routes/portal.routes");
+const proveedoresRoutes = require("./routes/proveedores.routes");
 
 const app = express();
 
@@ -59,6 +61,7 @@ app.use("/api/reportes", reportesRoutes);
 app.use("/api/clientes", clientesRoutes);
 app.use("/api/empresas", empresasRoutes);
 app.use("/api/portal", portalRoutes); // Portal público
+app.use("/api/proveedores", proveedoresRoutes);
 
 // Manejo de errores 404
 app.use((req, res) => {
