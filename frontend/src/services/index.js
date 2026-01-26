@@ -40,8 +40,10 @@ export const authService = {
 };
 
 export const productosService = {
-	obtenerTodos: async () => {
-		const response = await api.get("/productos");
+	obtenerTodos: async (empresa_id = null) => {
+		const params = {};
+		if (empresa_id) params.empresa_id = empresa_id;
+		const response = await api.get("/productos", { params });
 		return response.data;
 	},
 

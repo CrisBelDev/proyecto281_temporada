@@ -5,9 +5,11 @@ import Modal from "../components/Modal";
 import "../styles/Productos.css";
 
 function Productos() {
-	const { isAdmin } = useAuth();
+	const { isAdmin, isSuperUser } = useAuth();
 	const [productos, setProductos] = useState([]);
 	const [categorias, setCategorias] = useState([]);
+	const [empresas, setEmpresas] = useState([]);
+	const [empresaSeleccionada, setEmpresaSeleccionada] = useState("");
 	const [loading, setLoading] = useState(true);
 	const [modalOpen, setModalOpen] = useState(false);
 	const [productoEdit, setProductoEdit] = useState(null);
@@ -26,7 +28,16 @@ function Productos() {
 	useEffect(() => {
 		cargarProductos();
 		cargarCategorias();
+		if (isSuperUser()) {
+			cargarEmpresas();
+		}
 	}, []);
+
+	useEffect(() => {
+		if (isSuperUser()) {
+			cargarProductos();
+		}
+	}, [empresaSeleccionada]);
 
 	const cargarCategorias = async () => {
 		try {
@@ -45,9 +56,27 @@ function Productos() {
 		}
 	};
 
+	const cargarEmpresas = async () => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch("http://localhost:3000/api/empresas", {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+			});
+			const data = await response.json();
+			if (data.success) {
+				setEmpresas(data.data);
+			}
+		} catch (error) {
+			console.error("Error al cargar empresas:", error);
+		}
+	};
+
 	const cargarProductos = async () => {
 		try {
-			const response = await productosService.obtenerTodos();
+			const empresa_id = isSuperUser() ? empresaSeleccionada : null;
+			const response = await productosService.obtenerTodos(empresa_id);
 			if (response.success) {
 				setProductos(response.data);
 			}
@@ -135,18 +164,21 @@ function Productos() {
 			<div className="page-header">
 				<h1>Productos</h1>
 				<div className="header-actions">
-					<select
-						value={filtroCategoria}
-						onChange={(e) => setFiltroCategoria(e.target.value)}
-						className="filter-select"
-					>
-						<option value="">Todas las categorías</option>
-						{categorias.map((cat) => (
-							<option key={cat.id_categoria} value={cat.id_categoria}>
-								{cat.nombre}
-							</option>
-						))}
-					</select>
+					{isSuperUser() && (
+						<select
+							value={empresaSeleccionada}
+							onChange={(e) => setEmpresaSeleccionada(e.target.value)}
+							className="filter-select"
+						>
+							<option value="">Todas las empresas</option>
+							{empresas.map((emp) => (
+								<option key={emp.id_empresa} value={emp.id_empresa}>
+									{emp.nombre}
+								</option>
+							))}
+						</select>
+					)}
+
 					{isAdmin() && (
 						<button
 							onClick={() => handleOpenModal()}
