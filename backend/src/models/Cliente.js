@@ -43,10 +43,10 @@ const Cliente = sequelize.define(
 	{
 		tableName: "clientes",
 		timestamps: true,
-		paranoid: false, // Deshabilitado temporalmente hasta ejecutar migración
+		paranoid: true, // ✅ ACTIVADO: Soft delete
 		createdAt: "fecha_creacion",
 		updatedAt: "fecha_actualizacion",
-		// deletedAt: "fecha_eliminacion", // Descomentar después de ejecutar migración
+		deletedAt: "fecha_eliminacion", // ✅ ACTIVADO
 	},
 );
 

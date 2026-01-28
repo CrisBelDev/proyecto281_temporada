@@ -285,10 +285,9 @@ exports.obtenerPorId = async (req, res) => {
 };
 
 // ============================================
-// PUNTO 4: Eliminar cliente (TEMPORAL: Hard Delete)
+// PUNTO 4: Eliminar cliente (Soft Delete)
 // ============================================
 // Ejemplo: DELETE /api/clientes/:id
-// NOTA: Actualmente elimina físicamente. Cambiar a soft delete después de migración
 exports.eliminar = async (req, res) => {
 	try {
 		const { id } = req.params;
@@ -316,12 +315,12 @@ exports.eliminar = async (req, res) => {
 			});
 		}
 
-		// TEMPORAL: Hard delete hasta ejecutar migración
-		await cliente.destroy({ force: true });
+		// ✅ SOFT DELETE: Eliminación lógica
+		await cliente.destroy(); // Con paranoid: true, esto hace soft delete
 
 		return res.status(200).json({
 			success: true,
-			mensaje: "Cliente eliminado exitosamente",
+			mensaje: "Cliente eliminado exitosamente (eliminación lógica)",
 			data: {
 				id_cliente: cliente.id_cliente,
 				nombre: cliente.nombre,
@@ -339,47 +338,31 @@ exports.eliminar = async (req, res) => {
 };
 
 // ============================================
-// PUNTO 5: Mostrar clientes eliminados (DESHABILITADO TEMPORALMENTE)
+// PUNTO 5: Mostrar clientes eliminados (Historial)
 // ============================================
-// Habilitar después de ejecutar migración de soft delete
 exports.obtenerEliminados = async (req, res) => {
 	try {
-		// TEMPORAL: Retornar array vacío hasta ejecutar migración
-		return res.status(200).json({
-			success: true,
-			data: [],
-			total_eliminados: 0,
-			mensaje:
-				"Función deshabilitada. Ejecutar migración add_soft_delete_clientes.sql primero",
-		});
-
-		/* DESCOMENTAR DESPUÉS DE MIGRACIÓN
 		const id_tenant = req.usuario.id_empresa;
 		const rolUsuario = req.usuario.nombre_rol;
 		const isSuperUser = rolUsuario === "SUPERUSER";
-		const { empresa_id } = req.query;
-		
-		// Construir where clause
-		let whereClause = {};
-		if (isSuperUser) {
-			if (empresa_id) {
-				whereClause.id_empresa = empresa_id;
-			}
-		} else {
+
+		// Construir where clause según el rol
+		const whereClause = {};
+		if (!isSuperUser) {
 			whereClause.id_empresa = id_tenant;
 		}
 
-		// paranoid: false permite ver registros con fecha_eliminacion
+		// ✅ ACTIVADO: Obtener clientes eliminados
 		const clientesEliminados = await Cliente.findAll({
-			where: { id_empresa: id_tenant },
+			where: whereClause,
+			paranoid: false, // Incluir registros con deletedAt
 			include: [
 				{
 					model: Empresa,
 					as: "empresa",
-					attributes: ["id_empresa", "nombre"],
+					attributes: ["id_empresa", "nombre", "nit"],
 				},
 			],
-			paranoid: false, // Incluye registros eliminados
 			order: [["fecha_eliminacion", "DESC"]],
 		});
 
@@ -394,13 +377,11 @@ exports.obtenerEliminados = async (req, res) => {
 				...c.toJSON(),
 				id_tenant: c.id_empresa,
 			})),
-			total_eliminados: soloEliminados.length,
-			tenant_info: {
-				id_tenant: id_tenant,
-				mensaje: "Clientes eliminados (soft delete) de esta empresa",
-			},
+			total: soloEliminados.length,
+			mensaje: isSuperUser
+				? "Clientes eliminados de todas las empresas"
+				: "Clientes eliminados de su empresa",
 		});
-		*/
 	} catch (error) {
 		console.error("Error al obtener clientes eliminados:", error);
 		return res.status(500).json({
@@ -411,31 +392,26 @@ exports.obtenerEliminados = async (req, res) => {
 	}
 };
 
-// Restaurar cliente eliminado (DESHABILITADO TEMPORALMENTE)
+// ============================================
+// PUNTO 6: Restaurar cliente eliminado
+// ============================================
 exports.restaurar = async (req, res) => {
 	try {
-		return res.status(400).json({
-			success: false,
-			mensaje:
-				"Función deshabilitada. Ejecutar migración add_soft_delete_clientes.sql primero",
-		});
-
-		/* DESCOMENTAR DESPUÉS DE MIGRACIÓN
 		const { id } = req.params;
 		const id_tenant = req.usuario.id_empresa;
 		const rolUsuario = req.usuario.nombre_rol;
 		const isSuperUser = rolUsuario === "SUPERUSER";
-		
-		// Construir where clause
+
+		// Construir where clause según el rol
 		const whereClause = { id_cliente: id };
 		if (!isSuperUser) {
 			whereClause.id_empresa = id_tenant;
 		}
 
-		// Buscar en eliminados
+		// Buscar cliente eliminado
 		const cliente = await Cliente.findOne({
-			where: { id_cliente: id, id_empresa: id_tenant },
-			paranoid: false,
+			where: whereClause,
+			paranoid: false, // Incluir eliminados
 		});
 
 		if (!cliente) {
@@ -448,22 +424,22 @@ exports.restaurar = async (req, res) => {
 		if (!cliente.fecha_eliminacion) {
 			return res.status(400).json({
 				success: false,
-				mensaje: "Este cliente no está eliminado",
+				mensaje: "El cliente no está eliminado",
 			});
 		}
 
-		// Restaurar
+		// Restaurar cliente
 		await cliente.restore();
 
 		return res.status(200).json({
 			success: true,
 			mensaje: "Cliente restaurado exitosamente",
 			data: {
-				...cliente.toJSON(),
+				id_cliente: cliente.id_cliente,
+				nombre: cliente.nombre,
 				id_tenant: cliente.id_empresa,
 			},
 		});
-		*/
 	} catch (error) {
 		console.error("Error al restaurar cliente:", error);
 		return res.status(500).json({

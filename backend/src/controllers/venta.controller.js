@@ -444,3 +444,58 @@ exports.anularVenta = async (req, res) => {
 		});
 	}
 };
+
+// Marcar venta como entregada
+exports.marcarEntregado = async (req, res) => {
+	try {
+		const { id_empresa: id_tenant, nombre_rol } = req.usuario;
+		const { id } = req.params;
+
+		const isSuperUser = nombre_rol === "SUPERUSER";
+		const whereClause = { id_venta: id };
+
+		// Filtrado por empresa
+		if (!isSuperUser) {
+			whereClause.id_empresa = id_tenant;
+		}
+
+		const venta = await Venta.findOne({ where: whereClause });
+
+		if (!venta) {
+			return res.status(404).json({
+				success: false,
+				mensaje: "Venta no encontrada",
+			});
+		}
+
+		if (venta.estado !== "COMPLETADA") {
+			return res.status(400).json({
+				success: false,
+				mensaje: "Solo se pueden marcar como entregadas las ventas completadas",
+			});
+		}
+
+		if (venta.estado_entrega === "ENTREGADO") {
+			return res.status(400).json({
+				success: false,
+				mensaje: "La venta ya está marcada como entregada",
+			});
+		}
+
+		venta.estado_entrega = "ENTREGADO";
+		await venta.save();
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Venta marcada como entregada exitosamente",
+			data: venta,
+		});
+	} catch (error) {
+		console.error("Error al marcar venta como entregada:", error);
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al marcar venta como entregada",
+			error: error.message,
+		});
+	}
+};

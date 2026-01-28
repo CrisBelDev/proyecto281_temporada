@@ -35,6 +35,27 @@ const Empresa = sequelize.define(
 		logo: {
 			type: DataTypes.STRING(500),
 		},
+		plan_suscripcion: {
+			type: DataTypes.ENUM("BASICO", "PREMIUM"),
+			defaultValue: "BASICO",
+		},
+		monto_pago: {
+			type: DataTypes.DECIMAL(10, 2),
+			defaultValue: 0.0,
+			comment: "Monto mensual en Bolivianos",
+		},
+		horario_apertura: {
+			type: DataTypes.TIME,
+			allowNull: true,
+		},
+		horario_cierre: {
+			type: DataTypes.TIME,
+			allowNull: true,
+		},
+		dias_atencion: {
+			type: DataTypes.STRING(100),
+			defaultValue: "Lunes a Viernes",
+		},
 		activo: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: true,

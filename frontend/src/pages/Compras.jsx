@@ -42,6 +42,70 @@ function Compras() {
 		}
 	};
 
+	const handleMarcarRecibida = async (id) => {
+		if (
+			window.confirm(
+				"¿Marcar productos como recibidos? Esto actualizará el stock.",
+			)
+		) {
+			try {
+				const token = localStorage.getItem("token");
+				const response = await fetch(
+					`http://localhost:3000/api/compras/${id}/recibir`,
+					{
+						method: "PATCH",
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+				const data = await response.json();
+				if (data.success) {
+					alert("✅ Productos recibidos y stock actualizado");
+					cargarCompras();
+				} else {
+					alert(data.mensaje || "Error al marcar como recibida");
+				}
+			} catch (error) {
+				alert("Error al marcar como recibida");
+			}
+		}
+	};
+
+	const handleDescargarPDF = async (id, numero_compra) => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				`http://localhost:3000/api/compras/${id}/pdf`,
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.mensaje || "Error al descargar PDF");
+			}
+
+			const blob = await response.blob();
+			const url = window.URL.createObjectURL(blob);
+
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `compra-${numero_compra}.pdf`;
+			document.body.appendChild(a);
+			a.click();
+
+			window.URL.revokeObjectURL(url);
+			document.body.removeChild(a);
+		} catch (error) {
+			alert(error.message || "Error al descargar PDF");
+			console.error("Error:", error);
+		}
+	};
+
 	const formatFecha = (fecha) => {
 		return new Date(fecha).toLocaleString("es-BO");
 	};
@@ -86,22 +150,53 @@ function Compras() {
 								<td>Bs. {parseFloat(compra.total).toFixed(2)}</td>
 								<td>
 									<span
-										className={`badge ${compra.estado === "COMPLETADA" ? "badge-success" : "badge-danger"}`}
+										className={`badge ${
+											compra.estado === "RECIBIDA"
+												? "badge-success"
+												: compra.estado === "PENDIENTE"
+													? "badge-warning"
+													: "badge-danger"
+										}`}
 									>
 										{compra.estado}
 									</span>
 								</td>
 								{isAdmin() && (
 									<td>
-										{compra.estado === "COMPLETADA" && (
+										<div className="acciones-compra">
 											<button
-												onClick={() => handleAnular(compra.id_compra)}
-												className="btn-icon"
-												title="Anular"
+												onClick={() =>
+													handleDescargarPDF(
+														compra.id_compra,
+														compra.numero_compra,
+													)
+												}
+												className="btn-icon btn-pdf"
+												title="Descargar PDF"
 											>
-												❌
+												📄
 											</button>
-										)}
+
+											{compra.estado === "PENDIENTE" && (
+												<button
+													onClick={() => handleMarcarRecibida(compra.id_compra)}
+													className="btn-icon btn-success"
+													title="Marcar productos recibidos"
+												>
+													📦 Recibir
+												</button>
+											)}
+
+											{compra.estado !== "ANULADA" && (
+												<button
+													onClick={() => handleAnular(compra.id_compra)}
+													className="btn-icon btn-danger"
+													title="Anular"
+												>
+													❌
+												</button>
+											)}
+										</div>
 									</td>
 								)}
 							</tr>

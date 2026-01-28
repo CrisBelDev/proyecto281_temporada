@@ -45,8 +45,8 @@ const Compra = sequelize.define(
 			allowNull: false,
 		},
 		estado: {
-			type: DataTypes.ENUM("COMPLETADA", "ANULADA"),
-			defaultValue: "COMPLETADA",
+			type: DataTypes.ENUM("PENDIENTE", "RECIBIDA", "ANULADA"),
+			defaultValue: "PENDIENTE",
 		},
 		observaciones: {
 			type: DataTypes.TEXT,

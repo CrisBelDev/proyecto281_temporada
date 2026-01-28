@@ -23,4 +23,11 @@ router.patch(
 	ventaController.anularVenta,
 );
 
+// Marcar venta como entregada
+router.patch(
+	"/:id/entregar",
+	verificarRol("ADMIN", "SUPERUSER"),
+	ventaController.marcarEntregado,
+);
+
 module.exports = router;

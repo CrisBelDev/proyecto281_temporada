@@ -148,18 +148,15 @@ exports.crearCompra = async (req, res) => {
 				subtotal: subtotalItem,
 			});
 
-			// Incrementar stock
-			producto.stock_actual += item.cantidad;
-
-			// Actualizar precio de compra
+			// ⚠️ NO incrementar stock aquí - se hará al marcar como RECIBIDA
+			// Actualizar precio de compra de referencia
 			if (item.precio_unitario) {
 				producto.precio_compra = item.precio_unitario;
+				await producto.save({ transaction: t });
 			}
-
-			await producto.save({ transaction: t });
 		}
 
-		// Crear compra
+		// Crear compra en estado PENDIENTE
 		const nuevaCompra = await Compra.create(
 			{
 				id_empresa,
@@ -168,7 +165,7 @@ exports.crearCompra = async (req, res) => {
 				numero_compra: numeroCompra,
 				fecha_compra: new Date(),
 				total,
-				estado: "COMPLETADA",
+				estado: "PENDIENTE", // ⚠️ Estado inicial PENDIENTE
 				observaciones,
 			},
 			{ transaction: t },
@@ -192,7 +189,7 @@ exports.crearCompra = async (req, res) => {
 				id_usuario,
 				tipo: "COMPRA",
 				titulo: "Nueva compra registrada",
-				mensaje: `Compra ${numeroCompra} por un total de Bs. ${total}`,
+				mensaje: `Compra ${numeroCompra} por un total de Bs. ${total} - PENDIENTE DE RECEPCIÓN`,
 			},
 			{ transaction: t },
 		);
@@ -218,7 +215,8 @@ exports.crearCompra = async (req, res) => {
 
 		return res.status(201).json({
 			success: true,
-			mensaje: "Compra registrada exitosamente",
+			mensaje:
+				"Compra registrada exitosamente - PENDIENTE DE RECEPCIÓN. Use 'Marcar como Recibida' para actualizar el stock.",
 			data: compraCreada,
 		});
 	} catch (error) {
@@ -293,6 +291,113 @@ exports.anularCompra = async (req, res) => {
 		return res.status(500).json({
 			success: false,
 			mensaje: "Error al anular compra",
+			error: error.message,
+		});
+	}
+};
+
+// Marcar compra como recibida y actualizar stock
+exports.marcarRecibida = async (req, res) => {
+	const t = await sequelize.transaction();
+
+	try {
+		const { id_empresa } = req.usuario;
+		const { id } = req.params;
+
+		const compra = await Compra.findOne({
+			where: {
+				id_compra: id,
+				id_empresa,
+			},
+			include: [{ model: DetalleCompra, as: "detalles" }],
+			transaction: t,
+		});
+
+		if (!compra) {
+			await t.rollback();
+			return res.status(404).json({
+				success: false,
+				mensaje: "Compra no encontrada",
+			});
+		}
+
+		if (compra.estado === "RECIBIDA") {
+			await t.rollback();
+			return res.status(400).json({
+				success: false,
+				mensaje: "La compra ya fue marcada como recibida",
+			});
+		}
+
+		if (compra.estado === "ANULADA") {
+			await t.rollback();
+			return res.status(400).json({
+				success: false,
+				mensaje: "No se puede recibir una compra anulada",
+			});
+		}
+
+		// ✅ AHORA SÍ: Incrementar stock de productos
+		for (const detalle of compra.detalles) {
+			const producto = await Producto.findByPk(detalle.id_producto, {
+				transaction: t,
+			});
+			if (producto) {
+				const stockAnterior = producto.stock_actual;
+				producto.stock_actual += detalle.cantidad;
+				await producto.save({ transaction: t });
+
+				console.log(
+					`📦 Producto "${producto.nombre}": Stock ${stockAnterior} → ${producto.stock_actual} (+${detalle.cantidad})`,
+				);
+			}
+		}
+
+		// Actualizar estado de compra
+		compra.estado = "RECIBIDA";
+		await compra.save({ transaction: t });
+
+		// Crear notificación
+		await Notificacion.create(
+			{
+				id_empresa,
+				tipo: "COMPRA",
+				titulo: "Productos recibidos",
+				mensaje: `Los productos de la compra ${compra.numero_compra} han sido recibidos y el stock actualizado`,
+			},
+			{ transaction: t },
+		);
+
+		await t.commit();
+
+		// Obtener compra actualizada
+		const compraActualizada = await Compra.findByPk(compra.id_compra, {
+			include: [
+				{ model: Proveedor, as: "proveedor" },
+				{
+					model: Usuario,
+					as: "usuario",
+					attributes: ["id_usuario", "nombre", "apellido"],
+				},
+				{
+					model: DetalleCompra,
+					as: "detalles",
+					include: [{ model: Producto, as: "producto" }],
+				},
+			],
+		});
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Compra marcada como recibida y stock actualizado exitosamente",
+			data: compraActualizada,
+		});
+	} catch (error) {
+		await t.rollback();
+		console.error("Error al marcar compra como recibida:", error);
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al marcar compra como recibida",
 			error: error.message,
 		});
 	}

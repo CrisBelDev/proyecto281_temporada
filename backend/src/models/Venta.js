@@ -60,6 +60,10 @@ const Venta = sequelize.define(
 			type: DataTypes.ENUM("COMPLETADA", "ANULADA"),
 			defaultValue: "COMPLETADA",
 		},
+		estado_entrega: {
+			type: DataTypes.ENUM("PENDIENTE", "ENTREGADO"),
+			defaultValue: "PENDIENTE",
+		},
 		observaciones: {
 			type: DataTypes.TEXT,
 		},

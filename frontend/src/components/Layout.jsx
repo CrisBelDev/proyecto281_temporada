@@ -1,10 +1,40 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useState, useEffect } from "react";
 import "../styles/Layout.css";
 
 function Layout() {
 	const { usuario, logout, isAdmin, isSuperUser } = useAuth();
 	const navigate = useNavigate();
+	const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState(0);
+
+	useEffect(() => {
+		if (!isSuperUser()) {
+			cargarNotificacionesNoLeidas();
+			const interval = setInterval(cargarNotificacionesNoLeidas, 60000); // Actualizar cada minuto
+			return () => clearInterval(interval);
+		}
+	}, []);
+
+	const cargarNotificacionesNoLeidas = async () => {
+		try {
+			const token = localStorage.getItem("token");
+			const response = await fetch(
+				"http://localhost:3000/api/notificaciones?solo_no_leidas=true&limite=1",
+				{
+					headers: {
+						Authorization: `Bearer ${token}`,
+					},
+				},
+			);
+			const data = await response.json();
+			if (data.success) {
+				setNotificacionesNoLeidas(data.no_leidas || 0);
+			}
+		} catch (error) {
+			console.error("Error al cargar notificaciones:", error);
+		}
+	};
 
 	const handleLogout = () => {
 		logout();
@@ -43,6 +73,11 @@ function Layout() {
 						className={({ isActive }) => (isActive ? "active" : "")}
 					>
 						🔔 Notificaciones
+						{notificacionesNoLeidas > 0 && (
+							<span className="notification-badge">
+								{notificacionesNoLeidas}
+							</span>
+						)}
 					</NavLink>
 					<NavLink
 						to="/admin/clientes"

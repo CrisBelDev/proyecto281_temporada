@@ -43,6 +43,32 @@ function Ventas() {
 		}
 	};
 
+	const handleMarcarEntregado = async (id) => {
+		if (window.confirm("¿Marcar esta venta como entregada?")) {
+			try {
+				const token = localStorage.getItem("token");
+				const response = await fetch(
+					`http://localhost:3000/api/ventas/${id}/entregar`,
+					{
+						method: "PATCH",
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					},
+				);
+				const data = await response.json();
+				if (data.success) {
+					alert("✅ Venta marcada como entregada");
+					await cargarVentas();
+				} else {
+					alert(data.mensaje || "Error al marcar como entregada");
+				}
+			} catch (error) {
+				alert("Error al marcar como entregada");
+			}
+		}
+	};
+
 	const handleDescargarFactura = async (id, numero_venta) => {
 		try {
 			const token = localStorage.getItem("token");
@@ -118,7 +144,7 @@ function Ventas() {
 							<th>Descuento</th>
 							<th>Total</th>
 							<th>Método Pago</th>
-							<th>Estado</th>
+							<th>Estado</th> <th>Estado Entrega</th>{" "}
 							{isAdmin() && <th>Acciones</th>}
 						</tr>
 					</thead>
@@ -146,6 +172,17 @@ function Ventas() {
 										{venta.estado}
 									</span>
 								</td>
+								<td>
+									<span
+										className={`badge ${
+											venta.estado_entrega === "ENTREGADO"
+												? "badge-success"
+												: "badge-warning"
+										}`}
+									>
+										{venta.estado_entrega || "PENDIENTE"}
+									</span>
+								</td>
 
 								{isAdmin() && (
 									<td>
@@ -164,6 +201,18 @@ function Ventas() {
 													>
 														📄
 													</button>
+
+													{venta.estado_entrega === "PENDIENTE" && (
+														<button
+															onClick={() =>
+																handleMarcarEntregado(venta.id_venta)
+															}
+															className="btn-icon btn-success"
+															title="Marcar como entregado"
+														>
+															✅
+														</button>
+													)}
 
 													<button
 														onClick={() => handleAnular(venta.id_venta)}
