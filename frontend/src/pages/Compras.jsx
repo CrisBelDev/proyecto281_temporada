@@ -119,7 +119,7 @@ function Compras() {
 			<div className="page-header">
 				<h1>Compras</h1>
 				{isAdmin() && (
-					<Link to="/compras/nueva" className="btn btn-primary">
+					<Link to="/admin/proveedores" className="btn btn-primary">
 						+ Nueva Compra
 					</Link>
 				)}

@@ -349,7 +349,7 @@ const ModalProductosProveedor = ({ proveedor, onClose }) => {
 		}
 
 		try {
-			await comprasService.crear({
+			const response = await comprasService.crear({
 				id_proveedor: proveedor.id_proveedor,
 				productos: carritoPedido.map((item) => ({
 					id_producto: item.id_producto,
@@ -358,6 +358,26 @@ const ModalProductosProveedor = ({ proveedor, onClose }) => {
 				})),
 				observaciones: `Pedido desde gestión de proveedor: ${proveedor.nombre}`,
 			});
+
+			// Descargar PDF automáticamente
+			if (response.success && response.data?.id_compra) {
+				const idCompra = response.data.id_compra;
+				try {
+					const pdfResponse = await comprasService.descargarPDF(idCompra);
+					const blob = new Blob([pdfResponse], { type: "application/pdf" });
+					const url = window.URL.createObjectURL(blob);
+					const link = document.createElement("a");
+					link.href = url;
+					link.download = `compra_${idCompra}_${proveedor.nombre.replace(/\s+/g, "_")}.pdf`;
+					document.body.appendChild(link);
+					link.click();
+					document.body.removeChild(link);
+					window.URL.revokeObjectURL(url);
+				} catch (pdfError) {
+					console.error("Error al descargar PDF:", pdfError);
+					// No mostrar error al usuario, solo log
+				}
+			}
 
 			alert("Pedido registrado exitosamente");
 			cerrarModalPedido();
