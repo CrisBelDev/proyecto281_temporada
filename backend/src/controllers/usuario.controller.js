@@ -121,6 +121,8 @@ exports.crearUsuario = async (req, res) => {
 			password,
 			telefono,
 			activo: true,
+			email_verificado: true, // Los usuarios creados por admin/superuser ya están verificados
+			email_verificado_fecha: new Date(), // Fecha de verificación automática
 		});
 
 		// Obtener usuario con rol y empresa
