@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../providers/ventas_provider.dart';
 import '../../providers/clientes_provider.dart';
+import '../../models/cliente.dart';
 import '../../config/theme.dart';
 
 class NuevaVentaScreen extends StatefulWidget {
@@ -15,6 +16,10 @@ class NuevaVentaScreen extends StatefulWidget {
 
 class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
   int? _clienteSeleccionado;
+  String? _nombreClienteSeleccionado;
+  final _searchController = TextEditingController();
+  bool _mostrarResultados = false;
+  List<Cliente> _clientesFiltrados = [];
 
   @override
   void initState() {
@@ -22,9 +27,54 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
     _loadClientes();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadClientes() async {
     final provider = Provider.of<ClientesProvider>(context, listen: false);
     await provider.cargarClientes();
+  }
+
+  void _filtrarClientes(String query) {
+    final provider = Provider.of<ClientesProvider>(context, listen: false);
+    setState(() {
+      if (query.isEmpty) {
+        _clientesFiltrados = provider.clientes;
+        _mostrarResultados = false;
+      } else {
+        _clientesFiltrados = provider.buscarClientes(query);
+        _mostrarResultados = true;
+      }
+    });
+  }
+
+  void _seleccionarCliente(Cliente cliente) {
+    setState(() {
+      _clienteSeleccionado = cliente.id;
+      _nombreClienteSeleccionado = cliente.nombre;
+      _searchController.text = cliente.nombre;
+      _mostrarResultados = false;
+    });
+  }
+
+  Future<void> _mostrarDialogoNuevoCliente() async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => const _NuevoClienteDialog(),
+    );
+
+    if (result == true && mounted) {
+      await _loadClientes();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cliente registrado exitosamente'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   Future<void> _realizarVenta() async {
@@ -124,33 +174,122 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
 
           return Column(
             children: [
-              // Selector de cliente
+              // Selector de cliente con búsqueda
               Container(
                 padding: const EdgeInsets.all(16),
                 color: Colors.grey[100],
-                child: Consumer<ClientesProvider>(
-                  builder: (context, clientesProvider, _) {
-                    return DropdownButtonFormField<int>(
-                      value: _clienteSeleccionado,
-                      decoration: const InputDecoration(
-                        labelText: 'Cliente',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      items: clientesProvider.clientes
-                          .map(
-                            (cliente) => DropdownMenuItem(
-                              value: cliente.id,
-                              child: Text(cliente.nombre),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              labelText: 'Buscar o seleccionar cliente',
+                              hintText: 'Escribe el nombre del cliente...',
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: _searchController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() {
+                                          _clienteSeleccionado = null;
+                                          _nombreClienteSeleccionado = null;
+                                          _mostrarResultados = false;
+                                        });
+                                      },
+                                    )
+                                  : null,
                             ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _clienteSeleccionado = value;
-                        });
-                      },
-                    );
-                  },
+                            onChanged: _filtrarClientes,
+                            onTap: () {
+                              if (_searchController.text.isEmpty) {
+                                _filtrarClientes('');
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton.icon(
+                          onPressed: _mostrarDialogoNuevoCliente,
+                          icon: const Icon(Icons.person_add, size: 20),
+                          label: const Text('Nuevo'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 16,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_mostrarResultados && _clientesFiltrados.isNotEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: _clientesFiltrados.length,
+                          itemBuilder: (context, index) {
+                            final cliente = _clientesFiltrados[index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                child: Text(
+                                  cliente.nombre[0].toUpperCase(),
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ),
+                              title: Text(cliente.nombre),
+                              subtitle: Text(
+                                cliente.documento ?? 'Sin documento',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              onTap: () => _seleccionarCliente(cliente),
+                            );
+                          },
+                        ),
+                      ),
+                    if (_mostrarResultados && _clientesFiltrados.isEmpty)
+                      Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: [
+                            const Text(
+                              'No se encontraron clientes',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton.icon(
+                              onPressed: _mostrarDialogoNuevoCliente,
+                              icon: const Icon(Icons.person_add),
+                              label: const Text('Registrar nuevo cliente'),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
@@ -322,6 +461,166 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
           );
         },
       ),
+    );
+  }
+}
+
+class _NuevoClienteDialog extends StatefulWidget {
+  const _NuevoClienteDialog();
+
+  @override
+  State<_NuevoClienteDialog> createState() => _NuevoClienteDialogState();
+}
+
+class _NuevoClienteDialogState extends State<_NuevoClienteDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nombreController = TextEditingController();
+  final _documentoController = TextEditingController();
+  final _telefonoController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _direccionController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _nombreController.dispose();
+    _documentoController.dispose();
+    _telefonoController.dispose();
+    _emailController.dispose();
+    _direccionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _guardarCliente() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final clientesProvider =
+        Provider.of<ClientesProvider>(context, listen: false);
+
+    final clienteData = {
+      'nombre': _nombreController.text.trim(),
+      'nit': _documentoController.text.trim().isEmpty
+          ? null
+          : _documentoController.text.trim(),
+      'telefono': _telefonoController.text.trim().isEmpty
+          ? null
+          : _telefonoController.text.trim(),
+      'email': _emailController.text.trim().isEmpty
+          ? null
+          : _emailController.text.trim(),
+      'direccion': _direccionController.text.trim().isEmpty
+          ? null
+          : _direccionController.text.trim(),
+    };
+
+    final success = await clientesProvider.crearCliente(clienteData);
+
+    if (mounted) {
+      if (success) {
+        Navigator.pop(context, true);
+      } else {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              clientesProvider.error ?? 'Error al crear cliente',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Nuevo Cliente'),
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nombreController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre *',
+                  prefixIcon: Icon(Icons.person),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El nombre es requerido';
+                  }
+                  return null;
+                },
+                textCapitalization: TextCapitalization.words,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _documentoController,
+                decoration: const InputDecoration(
+                  labelText: 'NIT / CI',
+                  prefixIcon: Icon(Icons.badge),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _telefonoController,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono',
+                  prefixIcon: Icon(Icons.phone),
+                ),
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: Icon(Icons.email),
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value != null &&
+                      value.isNotEmpty &&
+                      !value.contains('@')) {
+                    return 'Email inválido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _direccionController,
+                decoration: const InputDecoration(
+                  labelText: 'Dirección',
+                  prefixIcon: Icon(Icons.location_on),
+                ),
+                maxLines: 2,
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isLoading ? null : () => Navigator.pop(context, false),
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _isLoading ? null : _guardarCliente,
+          child: _isLoading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Guardar'),
+        ),
+      ],
     );
   }
 }

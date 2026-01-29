@@ -29,12 +29,15 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
   IconData _getIconoNotificacion(String tipo) {
     switch (tipo) {
       case 'STOCK_BAJO':
+        return Icons.warning;
       case 'STOCK_AGOTADO':
-        return Icons.inventory_2;
-      case 'VENTA_REGISTRADA':
+        return Icons.error;
+      case 'VENTA':
         return Icons.shopping_cart;
-      case 'COMPRA_APROBADA':
+      case 'COMPRA':
         return Icons.shopping_bag;
+      case 'SISTEMA':
+        return Icons.info;
       default:
         return Icons.notifications;
     }
@@ -46,10 +49,12 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
         return AppTheme.warningColor;
       case 'STOCK_AGOTADO':
         return AppTheme.errorColor;
-      case 'VENTA_REGISTRADA':
+      case 'VENTA':
         return AppTheme.successColor;
-      case 'COMPRA_APROBADA':
+      case 'COMPRA':
         return AppTheme.primaryColor;
+      case 'SISTEMA':
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -162,9 +167,8 @@ class _NotificacionesScreenState extends State<NotificacionesScreen> {
                       title: Text(
                         notif.titulo,
                         style: TextStyle(
-                          fontWeight: notif.leida
-                              ? FontWeight.normal
-                              : FontWeight.bold,
+                          fontWeight:
+                              notif.leida ? FontWeight.normal : FontWeight.bold,
                         ),
                       ),
                       subtitle: Column(

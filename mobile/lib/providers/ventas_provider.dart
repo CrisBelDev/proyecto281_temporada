@@ -30,8 +30,7 @@ class VentasProvider with ChangeNotifier {
       final data = ApiService.parseResponse(response);
 
       if (data['success'] == true) {
-        _ventas =
-            (data['ventas'] as List).map((v) => Venta.fromJson(v)).toList();
+        _ventas = (data['data'] as List).map((v) => Venta.fromJson(v)).toList();
       }
     } catch (e) {
       _error = e.toString();
@@ -100,19 +99,18 @@ class VentasProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final detalles = _carrito
+      final productos = _carrito
           .map(
             (item) => {
               'id_producto': item.producto.id,
               'cantidad': item.cantidad,
-              'precio_unitario': item.producto.precioVenta,
             },
           )
           .toList();
 
       final response = await ApiService.post(AppConstants.ventasEndpoint, {
         'id_cliente': idCliente,
-        'detalles': detalles,
+        'productos': productos,
       });
 
       final data = ApiService.parseResponse(response);

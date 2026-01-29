@@ -28,20 +28,28 @@ class Venta {
   factory Venta.fromJson(Map<String, dynamic> json) {
     return Venta(
       id: json['id_venta'] ?? json['id'],
-      numeroFactura: json['numero_factura'] ?? '',
-      fecha: DateTime.parse(json['fecha']),
-      total: (json['total'] ?? 0).toDouble(),
+      numeroFactura: json['numero_venta'] ?? json['numero_factura'] ?? '',
+      fecha: DateTime.parse(json['fecha_venta'] ?? json['fecha']),
+      total: double.parse(json['total'].toString()),
       estado: json['estado'] ?? 'COMPLETADA',
       idCliente: json['id_cliente'] ?? 0,
       idUsuario: json['id_usuario'] ?? 0,
       idEmpresa: json['id_empresa'] ?? 0,
-      nombreCliente: json['Cliente']?['nombre'] ?? json['nombre_cliente'],
-      nombreUsuario: json['Usuario']?['nombre'] ?? json['nombre_usuario'],
-      detalles: json['DetalleVentas'] != null
-          ? (json['DetalleVentas'] as List)
-                .map((d) => DetalleVenta.fromJson(d))
-                .toList()
-          : null,
+      nombreCliente: json['cliente']?['nombre'] ??
+          json['Cliente']?['nombre'] ??
+          json['nombre_cliente'],
+      nombreUsuario: json['usuario']?['nombre'] ??
+          json['Usuario']?['nombre'] ??
+          json['nombre_usuario'],
+      detalles: json['detalles'] != null
+          ? (json['detalles'] as List)
+              .map((d) => DetalleVenta.fromJson(d))
+              .toList()
+          : json['DetalleVentas'] != null
+              ? (json['DetalleVentas'] as List)
+                  .map((d) => DetalleVenta.fromJson(d))
+                  .toList()
+              : null,
     );
   }
 
@@ -70,10 +78,12 @@ class DetalleVenta {
     return DetalleVenta(
       id: json['id_detalle_venta'] ?? json['id'],
       cantidad: json['cantidad'] ?? 0,
-      precioUnitario: (json['precio_unitario'] ?? 0).toDouble(),
-      subtotal: (json['subtotal'] ?? 0).toDouble(),
+      precioUnitario: double.parse(json['precio_unitario'].toString()),
+      subtotal: double.parse(json['subtotal'].toString()),
       idProducto: json['id_producto'] ?? 0,
-      nombreProducto: json['Producto']?['nombre'] ?? json['nombre_producto'],
+      nombreProducto: json['producto']?['nombre'] ??
+          json['Producto']?['nombre'] ??
+          json['nombre_producto'],
     );
   }
 
