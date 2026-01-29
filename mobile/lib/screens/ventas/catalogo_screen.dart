@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../providers/productos_provider.dart';
-import '../../providers/ventas_provider.dart';
 import '../../models/producto.dart';
 import '../../config/theme.dart';
 
@@ -49,11 +48,8 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     });
   }
 
-  void _agregarAlCarrito(Producto producto) {
-    showDialog(
-      context: context,
-      builder: (context) => _CantidadDialog(producto: producto),
-    );
+  void _verDetalleProducto(Producto producto) {
+    context.push('/productos/${producto.id}');
   }
 
   @override
@@ -66,45 +62,6 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Catálogo de Productos'),
-        actions: [
-          Consumer<VentasProvider>(
-            builder: (context, ventasProvider, _) {
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.shopping_cart),
-                    onPressed: () => context.push('/nueva-venta'),
-                  ),
-                  if (ventasProvider.totalItemsCarrito > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.errorColor,
-                          shape: BoxShape.circle,
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          '${ventasProvider.totalItemsCarrito}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              );
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -162,7 +119,7 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                       return Card(
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
-                          onTap: () => _agregarAlCarrito(producto),
+                          onTap: () => _verDetalleProducto(producto),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -248,104 +205,5 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
 
   Widget _buildPlaceholder() {
     return Icon(Icons.inventory_2, size: 60, color: Colors.grey[400]);
-  }
-}
-
-class _CantidadDialog extends StatefulWidget {
-  final Producto producto;
-
-  const _CantidadDialog({required this.producto});
-
-  @override
-  State<_CantidadDialog> createState() => _CantidadDialogState();
-}
-
-class _CantidadDialogState extends State<_CantidadDialog> {
-  int _cantidad = 1;
-
-  @override
-  Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(
-      symbol: '\$',
-      decimalDigits: 2,
-    );
-
-    return AlertDialog(
-      title: Text(widget.producto.nombre),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('Precio: ${currencyFormat.format(widget.producto.precioVenta)}'),
-          Text('Stock disponible: ${widget.producto.stock}'),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.remove_circle),
-                onPressed:
-                    _cantidad > 1 ? () => setState(() => _cantidad--) : null,
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '$_cantidad',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add_circle),
-                onPressed: _cantidad < widget.producto.stock
-                    ? () => setState(() => _cantidad++)
-                    : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Total: ${currencyFormat.format(widget.producto.precioVenta * _cantidad)}',
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final ventasProvider = Provider.of<VentasProvider>(
-              context,
-              listen: false,
-            );
-            ventasProvider.agregarAlCarrito(widget.producto, _cantidad);
-            Navigator.pop(context);
-
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('${widget.producto.nombre} agregado al carrito'),
-                duration: const Duration(seconds: 2),
-                action: SnackBarAction(
-                  label: 'Ver carrito',
-                  onPressed: () => context.push('/nueva-venta'),
-                ),
-              ),
-            );
-          },
-          child: const Text('Agregar'),
-        ),
-      ],
-    );
   }
 }
