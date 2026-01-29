@@ -4,6 +4,9 @@ const Rol = require("../models/Rol");
 const Producto = require("../models/Producto");
 const Cliente = require("../models/Cliente");
 const Venta = require("../models/Venta");
+const HistorialPago = require("../models/HistorialPago");
+const path = require("path");
+const fs = require("fs");
 
 // Obtener todas las empresas (solo SUPERUSER)
 exports.obtenerEmpresas = async (req, res) => {
@@ -174,7 +177,7 @@ exports.crearEmpresa = async (req, res) => {
 			telefono,
 			direccion,
 			email,
-			logo,
+			logo: req.file ? `/uploads/empresas/${req.file.filename}` : logo,
 			activo: true,
 		});
 
@@ -247,8 +250,24 @@ exports.actualizarEmpresa = async (req, res) => {
 			telefono: telefono !== undefined ? telefono : empresa.telefono,
 			direccion: direccion !== undefined ? direccion : empresa.direccion,
 			email: email !== undefined ? email : empresa.email,
-			logo: logo !== undefined ? logo : empresa.logo,
+			logo: req.file
+				? `/uploads/empresas/${req.file.filename}`
+				: logo !== undefined
+					? logo
+					: empresa.logo,
 		});
+
+		// Si se subió un nuevo logo, eliminar el anterior
+		if (req.file && empresa.logo) {
+			const oldLogoPath = path.join(
+				__dirname,
+				"../../uploads/empresas",
+				path.basename(empresa.logo),
+			);
+			if (fs.existsSync(oldLogoPath)) {
+				fs.unlinkSync(oldLogoPath);
+			}
+		}
 
 		return res.status(200).json({
 			success: true,
@@ -423,7 +442,7 @@ exports.obtenerEmpresasPublicas = async (req, res) => {
 	try {
 		const empresas = await Empresa.findAll({
 			where: { activo: true },
-			attributes: ["id_empresa", "nombre", "slug"],
+			attributes: ["id_empresa", "nombre", "slug", "logo"],
 			order: [["nombre", "ASC"]],
 		});
 
@@ -436,6 +455,329 @@ exports.obtenerEmpresasPublicas = async (req, res) => {
 		return res.status(500).json({
 			success: false,
 			mensaje: "Error al obtener empresas",
+			error: error.message,
+		});
+	}
+};
+
+// Actualizar solo el logo de la empresa
+exports.actualizarLogo = async (req, res) => {
+	try {
+		const { id } = req.params;
+
+		if (!req.file) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "No se proporcionó ningún logo",
+			});
+		}
+
+		const empresa = await Empresa.findByPk(id);
+
+		if (!empresa) {
+			// Si la empresa no existe, eliminar el logo subido
+			fs.unlinkSync(req.file.path);
+			return res.status(404).json({
+				success: false,
+				mensaje: "Empresa no encontrada",
+			});
+		}
+
+		// Eliminar logo anterior si existe
+		if (empresa.logo) {
+			const oldLogoPath = path.join(
+				__dirname,
+				"../../uploads/empresas",
+				path.basename(empresa.logo),
+			);
+			if (fs.existsSync(oldLogoPath)) {
+				fs.unlinkSync(oldLogoPath);
+			}
+		}
+
+		// Actualizar con el nuevo logo
+		empresa.logo = `/uploads/empresas/${req.file.filename}`;
+		await empresa.save();
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Logo actualizado exitosamente",
+			data: {
+				logo: empresa.logo,
+			},
+		});
+	} catch (error) {
+		console.error("Error al actualizar logo:", error);
+		// Si hay error, eliminar el logo subido
+		if (req.file && fs.existsSync(req.file.path)) {
+			fs.unlinkSync(req.file.path);
+		}
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al actualizar logo",
+			error: error.message,
+		});
+	}
+};
+
+// Obtener la empresa del usuario autenticado
+exports.obtenerMiEmpresa = async (req, res) => {
+	try {
+		const { id_empresa } = req.usuario;
+
+		if (!id_empresa) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "El usuario no tiene una empresa asociada",
+			});
+		}
+
+		const empresa = await Empresa.findByPk(id_empresa);
+
+		if (!empresa) {
+			return res.status(404).json({
+				success: false,
+				mensaje: "Empresa no encontrada",
+			});
+		}
+
+		return res.status(200).json({
+			success: true,
+			data: empresa,
+		});
+	} catch (error) {
+		console.error("Error al obtener mi empresa:", error);
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al obtener la empresa",
+			error: error.message,
+		});
+	}
+};
+
+// Actualizar la empresa del usuario autenticado
+exports.actualizarMiEmpresa = async (req, res) => {
+	try {
+		const { id_empresa } = req.usuario;
+
+		if (!id_empresa) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "El usuario no tiene una empresa asociada",
+			});
+		}
+
+		const empresa = await Empresa.findByPk(id_empresa);
+
+		if (!empresa) {
+			if (req.file && fs.existsSync(req.file.path)) {
+				fs.unlinkSync(req.file.path);
+			}
+			return res.status(404).json({
+				success: false,
+				mensaje: "Empresa no encontrada",
+			});
+		}
+
+		const {
+			nombre,
+			nit,
+			telefono,
+			direccion,
+			email,
+			horario_apertura,
+			horario_cierre,
+			dias_atencion,
+		} = req.body;
+
+		// Si hay nuevo logo
+		if (req.file) {
+			// Eliminar logo anterior si existe
+			if (empresa.logo) {
+				const oldLogoPath = path.join(
+					__dirname,
+					"../../uploads/empresas",
+					path.basename(empresa.logo),
+				);
+				if (fs.existsSync(oldLogoPath)) {
+					fs.unlinkSync(oldLogoPath);
+				}
+			}
+			empresa.logo = `/uploads/empresas/${req.file.filename}`;
+		}
+
+		// Actualizar campos permitidos
+		if (nombre) empresa.nombre = nombre;
+		if (nit) empresa.nit = nit;
+		if (telefono) empresa.telefono = telefono;
+		if (direccion) empresa.direccion = direccion;
+		if (email) empresa.email = email;
+		if (horario_apertura) empresa.horario_apertura = horario_apertura;
+		if (horario_cierre) empresa.horario_cierre = horario_cierre;
+		if (dias_atencion) empresa.dias_atencion = dias_atencion;
+
+		await empresa.save();
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Empresa actualizada exitosamente",
+			data: empresa,
+		});
+	} catch (error) {
+		console.error("Error al actualizar mi empresa:", error);
+		if (req.file && fs.existsSync(req.file.path)) {
+			fs.unlinkSync(req.file.path);
+		}
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al actualizar la empresa",
+			error: error.message,
+		});
+	}
+};
+
+// Cambiar plan de suscripción
+exports.cambiarPlanSuscripcion = async (req, res) => {
+	try {
+		const { id_empresa, id_usuario, rol } = req.usuario;
+		const { plan_nuevo, metodo_pago, empresa_id } = req.body;
+
+		// Si es SUPERUSER, puede cambiar el plan de cualquier empresa
+		let empresaId = id_empresa;
+		if (rol === "SUPERUSER" && empresa_id) {
+			empresaId = empresa_id;
+		}
+
+		if (!empresaId) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "Debes especificar una empresa para cambiar el plan",
+			});
+		}
+
+		// Validar plan
+		if (!["BASICO", "PREMIUM", "EMPRESARIAL"].includes(plan_nuevo)) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "Plan inválido. Debe ser BASICO, PREMIUM o EMPRESARIAL",
+			});
+		}
+
+		const empresa = await Empresa.findByPk(empresaId);
+
+		if (!empresa) {
+			return res.status(404).json({
+				success: false,
+				mensaje: "Empresa no encontrada",
+			});
+		}
+
+		const plan_anterior = empresa.plan_suscripcion;
+
+		// Validar que no sea el mismo plan
+		if (plan_anterior === plan_nuevo) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "Ya tienes activo este plan de suscripción",
+			});
+		}
+
+		// Precios de los planes (mensuales)
+		const precios = {
+			BASICO: 50.0,
+			PREMIUM: 150.0,
+			EMPRESARIAL: 300.0,
+		};
+
+		const monto = precios[plan_nuevo];
+
+		// Calcular fecha de vencimiento (30 días desde hoy)
+		const fecha_vencimiento = new Date();
+		fecha_vencimiento.setDate(fecha_vencimiento.getDate() + 30);
+
+		// Crear registro de pago
+		const pago = await HistorialPago.create({
+			id_empresa: empresaId,
+			id_usuario,
+			plan_anterior,
+			plan_nuevo,
+			monto,
+			metodo_pago: metodo_pago || "QR",
+			estado_pago: "COMPLETADO",
+			descripcion: `Cambio de plan de ${plan_anterior} a ${plan_nuevo}`,
+			fecha_pago: new Date(),
+			fecha_vencimiento,
+			fecha_creacion: new Date(),
+		});
+
+		// Actualizar empresa
+		empresa.plan_suscripcion = plan_nuevo;
+		empresa.monto_pago = monto;
+		await empresa.save();
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Plan de suscripción actualizado exitosamente",
+			data: {
+				empresa: {
+					id_empresa: empresa.id_empresa,
+					nombre: empresa.nombre,
+					plan_suscripcion: empresa.plan_suscripcion,
+					monto_pago: empresa.monto_pago,
+				},
+				pago: {
+					id_pago: pago.id_pago,
+					monto: pago.monto,
+					plan_nuevo: pago.plan_nuevo,
+					metodo_pago: pago.metodo_pago,
+					fecha_pago: pago.fecha_pago,
+					fecha_vencimiento: pago.fecha_vencimiento,
+				},
+			},
+		});
+	} catch (error) {
+		console.error("Error al cambiar plan de suscripción:", error);
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al cambiar el plan de suscripción",
+			error: error.message,
+		});
+	}
+};
+
+// Obtener historial de pagos de la empresa
+exports.obtenerHistorialPagos = async (req, res) => {
+	try {
+		const { id_empresa } = req.usuario;
+
+		if (!id_empresa) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "El usuario no tiene una empresa asociada",
+			});
+		}
+
+		const pagos = await HistorialPago.findAll({
+			where: { id_empresa },
+			include: [
+				{
+					model: Usuario,
+					as: "usuario",
+					attributes: ["id_usuario", "nombre", "apellido", "email"],
+				},
+			],
+			order: [["fecha_pago", "DESC"]],
+		});
+
+		return res.status(200).json({
+			success: true,
+			data: pagos,
+		});
+	} catch (error) {
+		console.error("Error al obtener historial de pagos:", error);
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al obtener el historial de pagos",
 			error: error.message,
 		});
 	}

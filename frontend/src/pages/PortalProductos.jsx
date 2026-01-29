@@ -144,7 +144,7 @@ function PortalProductos() {
 						>
 							{producto.imagen ? (
 								<img
-									src={producto.imagen}
+									src={`http://localhost:3000${producto.imagen}`}
 									alt={producto.nombre}
 									className="producto-imagen"
 								/>
@@ -190,7 +190,7 @@ function PortalProductos() {
 						<div className="detalle-producto">
 							{productoDetalle.imagen ? (
 								<img
-									src={productoDetalle.imagen}
+									src={`http://localhost:3000${productoDetalle.imagen}`}
 									alt={productoDetalle.nombre}
 									className="detalle-imagen"
 								/>

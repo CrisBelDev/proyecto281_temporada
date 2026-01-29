@@ -90,6 +90,12 @@ function Layout() {
 					{!isSuperUser() && (
 						<>
 							<NavLink
+								to="/admin/mi-empresa"
+								className={({ isActive }) => (isActive ? "active" : "")}
+							>
+								🏪 Mi Empresa
+							</NavLink>
+							<NavLink
 								to="/admin/ventas"
 								className={({ isActive }) => (isActive ? "active" : "")}
 							>

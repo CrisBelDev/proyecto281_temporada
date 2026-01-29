@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/productos_provider.dart';
 import '../../models/producto.dart';
 import '../../config/theme.dart';
+import '../../utils/image_helper.dart';
 
 class DetalleProductoScreen extends StatefulWidget {
   final String productoId;
@@ -48,7 +50,7 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: Navegar a editar producto
+              context.push('/productos/${widget.productoId}/editar');
             },
           ),
         ],
@@ -69,9 +71,10 @@ class _DetalleProductoScreenState extends State<DetalleProductoScreen> {
                           width: double.infinity,
                           height: 250,
                           color: Colors.grey[200],
-                          child: _producto!.imagen != null
+                          child: ImageHelper.getImageUrl(_producto!.imagen) !=
+                                  null
                               ? Image.network(
-                                  _producto!.imagen!,
+                                  ImageHelper.getImageUrl(_producto!.imagen)!,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) => Icon(
                                     Icons.inventory_2,

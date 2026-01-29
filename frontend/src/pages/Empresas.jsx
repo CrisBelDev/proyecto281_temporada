@@ -11,6 +11,8 @@ function Empresas() {
 	const [modalOpen, setModalOpen] = useState(false);
 	const [modo, setModo] = useState("crear");
 	const [empresaEditando, setEmpresaEditando] = useState(null);
+	const [logoSeleccionado, setLogoSeleccionado] = useState(null);
+	const [previsualizacion, setPrevisualizacion] = useState(null);
 	const [formData, setFormData] = useState({
 		nombre: "",
 		nit: "",
@@ -55,6 +57,12 @@ function Empresas() {
 				email: empresa.email || "",
 				logo: empresa.logo || "",
 			});
+			// Mostrar logo existente
+			if (empresa.logo) {
+				setPrevisualizacion(`http://localhost:3000${empresa.logo}`);
+			} else {
+				setPrevisualizacion(null);
+			}
 		} else {
 			setModo("crear");
 			setEmpresaEditando(null);
@@ -66,12 +74,16 @@ function Empresas() {
 				email: "",
 				logo: "",
 			});
+			setPrevisualizacion(null);
 		}
+		setLogoSeleccionado(null);
 		setModalOpen(true);
 	};
 
 	const handleCloseModal = () => {
 		setModalOpen(false);
+		setLogoSeleccionado(null);
+		setPrevisualizacion(null);
 	};
 
 	const handleChange = (e) => {
@@ -81,21 +93,64 @@ function Empresas() {
 		});
 	};
 
+	const handleLogoChange = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			// Validar que sea imagen
+			if (!file.type.startsWith("image/")) {
+				alert("Por favor selecciona un archivo de imagen");
+				return;
+			}
+			// Validar tamaño (max 5MB)
+			if (file.size > 5 * 1024 * 1024) {
+				alert("La imagen no debe superar 5MB");
+				return;
+			}
+			setLogoSeleccionado(file);
+			// Crear previsualización
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setPrevisualizacion(reader.result);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
 			const token = localStorage.getItem("token");
+			const formDataToSend = new FormData();
+
+			// Agregar campos del formulario
+			Object.keys(formData).forEach((key) => {
+				if (formData[key] !== "") {
+					formDataToSend.append(key, formData[key]);
+				}
+			});
+
+			// Agregar logo si se seleccionó
+			if (logoSeleccionado) {
+				formDataToSend.append("logo", logoSeleccionado);
+			}
+
 			if (modo === "crear") {
-				await axios.post("/api/empresas", formData, {
-					headers: { Authorization: `Bearer ${token}` },
+				await axios.post("/api/empresas", formDataToSend, {
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "multipart/form-data",
+					},
 				});
 				alert("Empresa creada exitosamente");
 			} else {
 				await axios.put(
 					`/api/empresas/${empresaEditando.id_empresa}`,
-					formData,
+					formDataToSend,
 					{
-						headers: { Authorization: `Bearer ${token}` },
+						headers: {
+							Authorization: `Bearer ${token}`,
+							"Content-Type": "multipart/form-data",
+						},
 					},
 				);
 				alert("Empresa actualizada exitosamente");
@@ -326,15 +381,29 @@ function Empresas() {
 					</div>
 
 					<div className="form-group">
-						<label>Logo (URL)</label>
+						<label>Logo de la empresa</label>
 						<input
-							type="url"
-							name="logo"
-							value={formData.logo}
-							onChange={handleChange}
-							placeholder="https://ejemplo.com/logo.png"
+							type="file"
+							accept="image/*"
+							onChange={handleLogoChange}
+							className="form-control"
 						/>
-						<small className="form-hint">URL de la imagen del logo</small>
+						{previsualizacion && (
+							<div style={{ marginTop: "10px" }}>
+								<img
+									src={previsualizacion}
+									alt="Previsualización del logo"
+									style={{
+										maxWidth: "200px",
+										maxHeight: "200px",
+										objectFit: "contain",
+										border: "1px solid #ddd",
+										borderRadius: "4px",
+										padding: "5px",
+									}}
+								/>
+							</div>
+						)}
 					</div>
 
 					<div className="form-actions">

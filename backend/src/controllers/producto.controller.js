@@ -3,6 +3,8 @@ const Categoria = require("../models/Categoria");
 const Notificacion = require("../models/Notificacion");
 const Empresa = require("../models/Empresa");
 const { Op } = require("sequelize");
+const path = require("path");
+const fs = require("fs");
 
 // Obtener todos los productos (multitenant)
 exports.obtenerProductos = async (req, res) => {
@@ -205,7 +207,7 @@ exports.crearProducto = async (req, res) => {
 			precio_venta,
 			stock_actual: stockActual,
 			stock_minimo: stockMinimo,
-			imagen,
+			imagen: req.file ? `/uploads/productos/${req.file.filename}` : imagen,
 			activo: true,
 		});
 
@@ -302,7 +304,24 @@ exports.actualizarProducto = async (req, res) => {
 		if (stock_actual !== undefined) producto.stock_actual = stock_actual;
 		if (stock_minimo !== undefined) producto.stock_minimo = stock_minimo;
 		if (id_categoria) producto.id_categoria = id_categoria;
-		if (imagen !== undefined) producto.imagen = imagen;
+
+		// Si se subió una nueva imagen
+		if (req.file) {
+			// Eliminar imagen anterior si existe
+			if (producto.imagen) {
+				const oldImagePath = path.join(
+					__dirname,
+					"../../uploads/productos",
+					path.basename(producto.imagen),
+				);
+				if (fs.existsSync(oldImagePath)) {
+					fs.unlinkSync(oldImagePath);
+				}
+			}
+			producto.imagen = `/uploads/productos/${req.file.filename}`;
+		} else if (imagen !== undefined) {
+			producto.imagen = imagen;
+		}
 
 		await producto.save();
 
@@ -464,6 +483,79 @@ exports.obtenerProductosStockBajo = async (req, res) => {
 		return res.status(500).json({
 			success: false,
 			mensaje: "Error al obtener productos con stock bajo",
+			error: error.message,
+		});
+	}
+};
+
+// Actualizar solo la imagen del producto
+exports.actualizarImagen = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const id_tenant = req.usuario.id_empresa;
+		const rolUsuario = req.usuario.nombre_rol;
+		const isSuperUser = rolUsuario === "SUPERUSER";
+
+		if (!req.file) {
+			return res.status(400).json({
+				success: false,
+				mensaje: "No se proporcionó ninguna imagen",
+			});
+		}
+
+		// Construir where clause según el rol
+		const whereClause = { id_producto: id };
+		if (!isSuperUser) {
+			whereClause.id_empresa = id_tenant;
+		}
+
+		const producto = await Producto.findOne({
+			where: whereClause,
+		});
+
+		if (!producto) {
+			// Si el producto no existe, eliminar la imagen subida
+			fs.unlinkSync(req.file.path);
+			return res.status(404).json({
+				success: false,
+				mensaje: isSuperUser
+					? "Producto no encontrado"
+					: "Producto no encontrado en esta empresa",
+			});
+		}
+
+		// Eliminar imagen anterior si existe
+		if (producto.imagen) {
+			const oldImagePath = path.join(
+				__dirname,
+				"../../uploads/productos",
+				path.basename(producto.imagen),
+			);
+			if (fs.existsSync(oldImagePath)) {
+				fs.unlinkSync(oldImagePath);
+			}
+		}
+
+		// Actualizar con la nueva imagen
+		producto.imagen = `/uploads/productos/${req.file.filename}`;
+		await producto.save();
+
+		return res.status(200).json({
+			success: true,
+			mensaje: "Imagen actualizada exitosamente",
+			data: {
+				imagen: producto.imagen,
+			},
+		});
+	} catch (error) {
+		console.error("Error al actualizar imagen:", error);
+		// Si hay error, eliminar la imagen subida
+		if (req.file && fs.existsSync(req.file.path)) {
+			fs.unlinkSync(req.file.path);
+		}
+		return res.status(500).json({
+			success: false,
+			mensaje: "Error al actualizar imagen",
 			error: error.message,
 		});
 	}

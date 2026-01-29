@@ -36,7 +36,7 @@ const Empresa = sequelize.define(
 			type: DataTypes.STRING(500),
 		},
 		plan_suscripcion: {
-			type: DataTypes.ENUM("BASICO", "PREMIUM"),
+			type: DataTypes.ENUM("BASICO", "PREMIUM", "EMPRESARIAL"),
 			defaultValue: "BASICO",
 		},
 		monto_pago: {
@@ -117,6 +117,12 @@ Empresa.associate = (models) => {
 	Empresa.hasMany(models.Notificacion, {
 		foreignKey: "id_empresa",
 		as: "notificaciones",
+	});
+
+	// Una empresa tiene muchos pagos
+	Empresa.hasMany(models.HistorialPago, {
+		foreignKey: "id_empresa",
+		as: "pagos",
 	});
 };
 

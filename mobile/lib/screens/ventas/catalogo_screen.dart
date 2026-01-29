@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../providers/productos_provider.dart';
 import '../../models/producto.dart';
 import '../../config/theme.dart';
+import '../../utils/image_helper.dart';
 
 class CatalogoScreen extends StatefulWidget {
   const CatalogoScreen({super.key});
@@ -128,14 +129,17 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                                 height: 120,
                                 width: double.infinity,
                                 color: Colors.grey[200],
-                                child: producto.imagen != null
-                                    ? Image.network(
-                                        producto.imagen!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (_, __, ___) =>
-                                            _buildPlaceholder(),
-                                      )
-                                    : _buildPlaceholder(),
+                                child:
+                                    ImageHelper.getImageUrl(producto.imagen) !=
+                                            null
+                                        ? Image.network(
+                                            ImageHelper.getImageUrl(
+                                                producto.imagen)!,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (_, __, ___) =>
+                                                _buildPlaceholder(),
+                                          )
+                                        : _buildPlaceholder(),
                               ),
 
                               Padding(

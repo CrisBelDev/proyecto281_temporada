@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/productos_provider.dart';
 import '../../config/theme.dart';
+import '../../utils/image_helper.dart';
 
 class InventarioScreen extends StatefulWidget {
   const InventarioScreen({super.key});
@@ -116,6 +117,11 @@ class _InventarioScreenState extends State<InventarioScreen>
             ],
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push('/productos/nuevo'),
+        icon: const Icon(Icons.add),
+        label: const Text('Nuevo Producto'),
       ),
     );
   }
@@ -253,11 +259,11 @@ class _InventarioScreenState extends State<InventarioScreen>
                   color: Colors.grey[200],
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: producto.imagen != null
+                child: ImageHelper.getImageUrl(producto.imagen) != null
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(8),
                         child: Image.network(
-                          producto.imagen!,
+                          ImageHelper.getImageUrl(producto.imagen)!,
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) =>
                               Icon(Icons.inventory_2, color: Colors.grey[400]),

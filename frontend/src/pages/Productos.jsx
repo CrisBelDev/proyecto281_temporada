@@ -14,6 +14,8 @@ function Productos() {
 	const [modalOpen, setModalOpen] = useState(false);
 	const [productoEdit, setProductoEdit] = useState(null);
 	const [filtroCategoria, setFiltroCategoria] = useState("");
+	const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
+	const [previsualizacion, setPrevisualizacion] = useState(null);
 	const [formData, setFormData] = useState({
 		codigo: "",
 		nombre: "",
@@ -100,6 +102,12 @@ function Productos() {
 				stock_minimo: producto.stock_minimo,
 				id_categoria: producto.id_categoria || "",
 			});
+			// Mostrar imagen existente
+			if (producto.imagen) {
+				setPrevisualizacion(`http://localhost:3000${producto.imagen}`);
+			} else {
+				setPrevisualizacion(null);
+			}
 		} else {
 			setProductoEdit(null);
 			setFormData({
@@ -112,13 +120,17 @@ function Productos() {
 				stock_minimo: "",
 				id_categoria: "",
 			});
+			setPrevisualizacion(null);
 		}
+		setImagenSeleccionada(null);
 		setModalOpen(true);
 	};
 
 	const handleCloseModal = () => {
 		setModalOpen(false);
 		setProductoEdit(null);
+		setImagenSeleccionada(null);
+		setPrevisualizacion(null);
 	};
 
 	const handleChange = (e) => {
@@ -128,17 +140,68 @@ function Productos() {
 		});
 	};
 
+	const handleImagenChange = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			// Validar que sea imagen
+			if (!file.type.startsWith("image/")) {
+				alert("Por favor selecciona un archivo de imagen");
+				return;
+			}
+			// Validar tamaño (max 5MB)
+			if (file.size > 5 * 1024 * 1024) {
+				alert("La imagen no debe superar 5MB");
+				return;
+			}
+			setImagenSeleccionada(file);
+			// Crear previsualización
+			const reader = new FileReader();
+			reader.onloadend = () => {
+				setPrevisualizacion(reader.result);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
-			if (productoEdit) {
-				await productosService.actualizar(productoEdit.id_producto, formData);
-			} else {
-				await productosService.crear(formData);
+			const formDataToSend = new FormData();
+
+			// Agregar campos del formulario
+			Object.keys(formData).forEach((key) => {
+				if (formData[key] !== "") {
+					formDataToSend.append(key, formData[key]);
+				}
+			});
+
+			// Agregar imagen si se seleccionó
+			if (imagenSeleccionada) {
+				formDataToSend.append("imagen", imagenSeleccionada);
 			}
-			handleCloseModal();
-			cargarProductos();
-			alert("Producto guardado exitosamente");
+
+			const token = localStorage.getItem("token");
+			const url = productoEdit
+				? `http://localhost:3000/api/productos/${productoEdit.id_producto}`
+				: "http://localhost:3000/api/productos";
+
+			const response = await fetch(url, {
+				method: productoEdit ? "PUT" : "POST",
+				headers: {
+					Authorization: `Bearer ${token}`,
+				},
+				body: formDataToSend,
+			});
+
+			const data = await response.json();
+
+			if (data.success) {
+				handleCloseModal();
+				cargarProductos();
+				alert("Producto guardado exitosamente");
+			} else {
+				alert(data.mensaje || "Error al guardar producto");
+			}
 		} catch (error) {
 			alert(error.response?.data?.mensaje || "Error al guardar producto");
 		}
@@ -194,6 +257,7 @@ function Productos() {
 				<table className="table">
 					<thead>
 						<tr>
+							<th>Imagen</th>
 							<th>Código</th>
 							<th>Nombre</th>
 							<th>Categoría</th>
@@ -214,6 +278,23 @@ function Productos() {
 							)
 							.map((producto) => (
 								<tr key={producto.id_producto}>
+									{" "}
+									<td>
+										{producto.imagen ? (
+											<img
+												src={`http://localhost:3000${producto.imagen}`}
+												alt={producto.nombre}
+												style={{
+													width: "50px",
+													height: "50px",
+													objectFit: "cover",
+													borderRadius: "4px",
+												}}
+											/>
+										) : (
+											<span style={{ fontSize: "30px" }}>📦</span>
+										)}
+									</td>{" "}
 									<td>{producto.codigo}</td>
 									<td>{producto.nombre}</td>
 									<td>
@@ -317,6 +398,32 @@ function Productos() {
 							onChange={handleChange}
 							rows="3"
 						/>
+					</div>
+
+					<div className="form-group">
+						<label>Imagen del producto</label>
+						<input
+							type="file"
+							accept="image/*"
+							onChange={handleImagenChange}
+							className="form-control"
+						/>
+						{previsualizacion && (
+							<div style={{ marginTop: "10px" }}>
+								<img
+									src={previsualizacion}
+									alt="Previsualización"
+									style={{
+										maxWidth: "200px",
+										maxHeight: "200px",
+										objectFit: "contain",
+										border: "1px solid #ddd",
+										borderRadius: "4px",
+										padding: "5px",
+									}}
+								/>
+							</div>
+						)}
 					</div>
 
 					<div className="form-row">

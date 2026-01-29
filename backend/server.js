@@ -15,6 +15,7 @@ const DetalleVenta = require("./src/models/DetalleVenta");
 const Compra = require("./src/models/Compra");
 const DetalleCompra = require("./src/models/DetalleCompra");
 const Notificacion = require("./src/models/Notificacion");
+const HistorialPago = require("./src/models/HistorialPago");
 
 const PORT = process.env.PORT || 3000;
 
@@ -33,6 +34,7 @@ const models = {
 	Compra,
 	DetalleCompra,
 	Notificacion,
+	HistorialPago,
 };
 
 Object.values(models).forEach((model) => {

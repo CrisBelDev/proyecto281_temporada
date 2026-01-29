@@ -127,6 +127,12 @@ Usuario.associate = (models) => {
 		foreignKey: "id_usuario",
 		as: "notificaciones",
 	});
+
+	// Un usuario tiene muchos pagos realizados
+	Usuario.hasMany(models.HistorialPago, {
+		foreignKey: "id_usuario",
+		as: "pagos_realizados",
+	});
 };
 
 module.exports = Usuario;

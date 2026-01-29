@@ -28,6 +28,7 @@ import Usuarios from "./pages/Usuarios";
 import Reportes from "./pages/Reportes";
 import Clientes from "./pages/Clientes";
 import Empresas from "./pages/Empresas";
+import MiEmpresa from "./pages/MiEmpresa";
 import PortalProductos from "./pages/PortalProductos";
 import Proveedores from "./pages/Proveedores";
 
@@ -71,6 +72,7 @@ function App() {
 						<Route path="categorias" element={<Categorias />} />
 						<Route path="notificaciones" element={<Notificaciones />} />
 						<Route path="clientes" element={<Clientes />} />{" "}
+						<Route path="mi-empresa" element={<MiEmpresa />} />
 						<Route path="proveedores" element={<Proveedores />} />{" "}
 						<Route path="ventas" element={<Ventas />} />
 						<Route path="ventas/nueva" element={<NuevaVenta />} />

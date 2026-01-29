@@ -119,7 +119,15 @@ function Home() {
 							>
 								<div className="store-badge">Activa</div>
 								<div className="store-image">
-									<div className="store-icon">🏪</div>
+									{empresa.logo ? (
+										<img
+											src={`http://localhost:3000${empresa.logo}`}
+											alt={empresa.nombre}
+											className="store-logo"
+										/>
+									) : (
+										<div className="store-icon">🏪</div>
+									)}
 								</div>
 								<div className="store-content">
 									<h3 className="store-name">{empresa.nombre}</h3>

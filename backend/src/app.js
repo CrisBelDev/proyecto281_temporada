@@ -30,6 +30,7 @@ const clientesRoutes = require("./routes/clientes.routes");
 const empresasRoutes = require("./routes/empresas.routes");
 const portalRoutes = require("./routes/portal.routes");
 const proveedoresRoutes = require("./routes/proveedores.routes");
+const path = require("path");
 
 const app = express();
 
@@ -37,6 +38,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Servir archivos estáticos (imágenes)
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 // NOTA: Las asociaciones entre modelos ahora se manejan desde server.js
 // usando el patrón Model.associate(models) en cada modelo

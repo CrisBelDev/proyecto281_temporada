@@ -10,6 +10,7 @@ import '../screens/clientes/clientes_screen.dart';
 import '../screens/clientes/detalle_cliente_screen.dart';
 import '../screens/inventario/inventario_screen.dart';
 import '../screens/inventario/detalle_producto_screen.dart';
+import '../screens/inventario/producto_form_screen.dart';
 import '../screens/notificaciones/notificaciones_screen.dart';
 
 class AppRouter {
@@ -63,6 +64,19 @@ class AppRouter {
         path: '/inventario',
         name: 'inventario',
         builder: (context, state) => const InventarioScreen(),
+      ),
+      GoRoute(
+        path: '/productos/nuevo',
+        name: 'nuevo-producto',
+        builder: (context, state) => const ProductoFormScreen(),
+      ),
+      GoRoute(
+        path: '/productos/:id/editar',
+        name: 'editar-producto',
+        builder: (context, state) {
+          final id = state.pathParameters['id'];
+          return ProductoFormScreen(productoId: id);
+        },
       ),
       GoRoute(
         path: '/productos/:id',
