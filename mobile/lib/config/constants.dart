@@ -1,8 +1,19 @@
 class AppConstants {
   // API Configuration
-  // IMPORTANTE: Cambia esta IP a la de tu computadora
-  // Para emulador Android usa: http://10.0.2.2:3000/api
-  // Para dispositivo físico usa tu IP local (ejecuta: ipconfig en cmd)
+  // IMPORTANTE: Cambia esta IP según tu entorno:
+  //
+  // 1. Para emulador Android:
+  //    static const String baseUrl = 'http://10.0.2.2:3000/api';
+  //
+  // 2. Para dispositivo físico en la misma red:
+  //    - Ejecuta 'ipconfig' en Windows o 'ifconfig' en Linux/Mac
+  //    - Busca tu IP local (ej: 192.168.0.11)
+  //    - Usa: http://TU_IP:3000/api
+  //
+  // 3. Para otro desarrollador:
+  //    - Debe usar la IP de SU computadora donde corre el backend
+  //    - Asegurarse que el firewall permita conexiones al puerto 3000
+
   static const String baseUrl = 'http://192.168.0.11:3000/api';
 
   // Endpoints

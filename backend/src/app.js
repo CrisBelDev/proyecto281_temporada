@@ -35,7 +35,31 @@ const path = require("path");
 const app = express();
 
 // Middlewares
-app.use(cors());
+// CORS configurado para permitir múltiples orígenes
+const allowedOrigins = process.env.CORS_ORIGIN
+	? process.env.CORS_ORIGIN.split(",")
+	: ["http://localhost:5173"];
+
+app.use(
+	cors({
+		origin: function (origin, callback) {
+			// Permitir requests sin origin (como mobile apps o curl)
+			if (!origin) return callback(null, true);
+
+			if (allowedOrigins.indexOf(origin) !== -1) {
+				callback(null, true);
+			} else {
+				// En desarrollo, permitir cualquier origen
+				if (process.env.NODE_ENV === "development") {
+					callback(null, true);
+				} else {
+					callback(new Error("Not allowed by CORS"));
+				}
+			}
+		},
+		credentials: true,
+	}),
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

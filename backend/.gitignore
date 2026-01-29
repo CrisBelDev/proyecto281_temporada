@@ -1,6 +1,12 @@
 # Dependencias de Node.js
 node_modules/
 
+# Variables de entorno locales (opcional)
+.env.local
+.env.development
+.env.production
+
+# NOTA: .env se sube a Git para proyecto universitario
 
 # Logs
 logs

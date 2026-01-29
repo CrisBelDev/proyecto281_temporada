@@ -138,12 +138,17 @@ const iniciarServidor = async () => {
 
 		// Iniciar servidor - Escuchar en todas las interfaces (0.0.0.0) para acceso desde red local
 		app.listen(PORT, "0.0.0.0", () => {
+			const localIP = process.env.LOCAL_IP || "192.168.0.11";
 			console.log(`\n========================================`);
 			console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 			console.log(`📍 Local: http://localhost:${PORT}`);
-			console.log(`📍 Red Local: http://192.168.0.11:${PORT}`);
+			console.log(`📍 Red Local: http://${localIP}:${PORT}`);
 			console.log(`📍 API Local: http://localhost:${PORT}/api`);
-			console.log(`📍 API Red Local: http://192.168.0.11:${PORT}/api`);
+			console.log(`📍 API Red Local: http://${localIP}:${PORT}/api`);
+			console.log(`\n💡 Para acceder desde otro dispositivo:`);
+			console.log(`   1. Usa la URL: http://${localIP}:${PORT}/api`);
+			console.log(`   2. Asegúrate que el firewall permita el puerto ${PORT}`);
+			console.log(`   3. El dispositivo debe estar en la misma red WiFi`);
 			console.log(`========================================\n`);
 		});
 	} catch (error) {

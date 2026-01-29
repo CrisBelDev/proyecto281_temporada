@@ -48,7 +48,9 @@ function MiEmpresa() {
 					dias_atencion: empresaData.dias_atencion || "",
 				});
 				if (empresaData.logo) {
-					setPrevisualizacion(`http://localhost:3000${empresaData.logo}`);
+					const backendUrl =
+						import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+					setPrevisualizacion(`${backendUrl}${empresaData.logo}`);
 				}
 			}
 		} catch (error) {
