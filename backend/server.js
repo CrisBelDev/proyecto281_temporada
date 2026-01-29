@@ -134,12 +134,14 @@ const iniciarServidor = async () => {
 		// Crear usuario SUPERUSER por defecto
 		await crearSuperusuario();
 
-		// Iniciar servidor
-		app.listen(PORT, () => {
+		// Iniciar servidor - Escuchar en todas las interfaces (0.0.0.0) para acceso desde red local
+		app.listen(PORT, "0.0.0.0", () => {
 			console.log(`\n========================================`);
 			console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
-			console.log(`📍 http://localhost:${PORT}`);
-			console.log(`📍 API: http://localhost:${PORT}/api`);
+			console.log(`📍 Local: http://localhost:${PORT}`);
+			console.log(`📍 Red Local: http://192.168.0.11:${PORT}`);
+			console.log(`📍 API Local: http://localhost:${PORT}/api`);
+			console.log(`📍 API Red Local: http://192.168.0.11:${PORT}/api`);
 			console.log(`========================================\n`);
 		});
 	} catch (error) {
