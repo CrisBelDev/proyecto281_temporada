@@ -29,9 +29,8 @@ class ProductosProvider with ChangeNotifier {
       final data = ApiService.parseResponse(response);
 
       if (data['success'] == true) {
-        _productos = (data['productos'] as List)
-            .map((p) => Producto.fromJson(p))
-            .toList();
+        _productos =
+            (data['data'] as List).map((p) => Producto.fromJson(p)).toList();
       }
     } catch (e) {
       _error = e.toString();
@@ -49,7 +48,7 @@ class ProductosProvider with ChangeNotifier {
       final data = ApiService.parseResponse(response);
 
       if (data['success'] == true) {
-        _productosStockBajo = (data['productos'] as List)
+        _productosStockBajo = (data['data'] as List? ?? [])
             .map((p) => Producto.fromJson(p))
             .toList();
         notifyListeners();
@@ -67,7 +66,7 @@ class ProductosProvider with ChangeNotifier {
       final data = ApiService.parseResponse(response);
 
       if (data['success'] == true) {
-        return Producto.fromJson(data['producto']);
+        return Producto.fromJson(data['data']);
       }
     } catch (e) {
       _error = e.toString();
@@ -83,7 +82,7 @@ class ProductosProvider with ChangeNotifier {
     final lowerQuery = query.toLowerCase();
     return _productos.where((p) {
       return p.nombre.toLowerCase().contains(lowerQuery) ||
-          (p.codigoBarras?.toLowerCase().contains(lowerQuery) ?? false);
+          p.codigo.toLowerCase().contains(lowerQuery);
     }).toList();
   }
 }

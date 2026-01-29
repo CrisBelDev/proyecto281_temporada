@@ -181,7 +181,8 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    currencyFormat.format(item.producto.precio),
+                                    currencyFormat
+                                        .format(item.producto.precioVenta),
                                     style: TextStyle(color: Colors.grey[600]),
                                   ),
                                 ],
@@ -292,9 +293,8 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: ventasProvider.isLoading
-                            ? null
-                            : _realizarVenta,
+                        onPressed:
+                            ventasProvider.isLoading ? null : _realizarVenta,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),

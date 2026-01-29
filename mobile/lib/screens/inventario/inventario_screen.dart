@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/productos_provider.dart';
 import '../../config/theme.dart';
 
@@ -57,60 +58,147 @@ class _InventarioScreenState extends State<InventarioScreen>
           ],
         ),
       ),
-      body: Column(
-        children: [
-          // Búsqueda
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: _searchController,
-              decoration: const InputDecoration(
-                hintText: 'Buscar productos...',
-                prefixIcon: Icon(Icons.search),
+      body: Consumer<ProductosProvider>(
+        builder: (context, provider, _) {
+          return Column(
+            children: [
+              // Estadísticas rápidas
+              if (!provider.isLoading && provider.productos.isNotEmpty)
+                _buildEstadisticas(provider, currencyFormat),
+
+              // Búsqueda
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Buscar productos...',
+                    prefixIcon: Icon(Icons.search),
+                  ),
+                  onChanged: (value) => setState(() {}),
+                ),
               ),
-              onChanged: (value) => setState(() {}),
-            ),
+
+              // TabBarView
+              Expanded(
+                child: provider.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : TabBarView(
+                        controller: _tabController,
+                        children: [
+                          // Todos los productos
+                          _buildListaProductos(
+                            _searchController.text.isEmpty
+                                ? provider.productos
+                                : provider
+                                    .buscarProductos(_searchController.text),
+                            currencyFormat,
+                          ),
+
+                          // Stock bajo
+                          _buildListaProductos(
+                            provider.productosStockBajo,
+                            currencyFormat,
+                            stockBajo: true,
+                          ),
+
+                          // Sin stock
+                          _buildListaProductos(
+                            provider.productos
+                                .where((p) => p.sinStock)
+                                .toList(),
+                            currencyFormat,
+                            sinStock: true,
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEstadisticas(
+      ProductosProvider provider, NumberFormat currencyFormat) {
+    final totalProductos = provider.productos.length;
+    final totalStockBajo = provider.productos.where((p) => p.stockBajo).length;
+    final totalSinStock = provider.productos.where((p) => p.sinStock).length;
+    final valorTotal = provider.productos.fold<double>(
+      0,
+      (sum, p) => sum + p.valorInventario,
+    );
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withOpacity(0.05),
+        border: Border(
+          bottom: BorderSide(color: Colors.grey[300]!),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildEstadisticaItem(
+            'Total',
+            '$totalProductos',
+            Icons.inventory_2,
+            AppTheme.primaryColor,
           ),
-
-          // TabBarView
-          Expanded(
-            child: Consumer<ProductosProvider>(
-              builder: (context, provider, _) {
-                if (provider.isLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                return TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // Todos los productos
-                    _buildListaProductos(
-                      _searchController.text.isEmpty
-                          ? provider.productos
-                          : provider.buscarProductos(_searchController.text),
-                      currencyFormat,
-                    ),
-
-                    // Stock bajo
-                    _buildListaProductos(
-                      provider.productosStockBajo,
-                      currencyFormat,
-                      stockBajo: true,
-                    ),
-
-                    // Sin stock
-                    _buildListaProductos(
-                      provider.productos.where((p) => p.sinStock).toList(),
-                      currencyFormat,
-                      sinStock: true,
-                    ),
-                  ],
-                );
-              },
-            ),
+          _buildEstadisticaItem(
+            'Stock Bajo',
+            '$totalStockBajo',
+            Icons.warning,
+            AppTheme.warningColor,
+          ),
+          _buildEstadisticaItem(
+            'Sin Stock',
+            '$totalSinStock',
+            Icons.error,
+            AppTheme.errorColor,
+          ),
+          _buildEstadisticaItem(
+            'Valor Total',
+            currencyFormat.format(valorTotal),
+            Icons.attach_money,
+            AppTheme.successColor,
+            isSmallText: true,
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEstadisticaItem(
+    String label,
+    String value,
+    IconData icon,
+    Color color, {
+    bool isSmallText = false,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: isSmallText ? 14 : 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: Colors.grey[600],
+          ),
+        ),
+      ],
     );
   }
 
@@ -131,8 +219,8 @@ class _InventarioScreenState extends State<InventarioScreen>
               sinStock
                   ? 'No hay productos sin stock'
                   : stockBajo
-                  ? 'No hay productos con stock bajo'
-                  : 'No se encontraron productos',
+                      ? 'No hay productos con stock bajo'
+                      : 'No se encontraron productos',
               style: TextStyle(fontSize: 16, color: Colors.grey[600]),
             ),
           ],
@@ -151,6 +239,13 @@ class _InventarioScreenState extends State<InventarioScreen>
           return Card(
             margin: const EdgeInsets.only(bottom: 12),
             child: ListTile(
+              onTap: () {
+                // Navegar al detalle del producto
+                context.pushNamed(
+                  'detalle-producto',
+                  pathParameters: {'id': producto.id.toString()},
+                );
+              },
               leading: Container(
                 width: 60,
                 height: 60,
@@ -177,7 +272,33 @@ class _InventarioScreenState extends State<InventarioScreen>
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(currencyFormat.format(producto.precio)),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          producto.codigo,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        currencyFormat.format(producto.precioVenta),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.successColor,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 4),
                   Row(
                     children: [
@@ -200,8 +321,8 @@ class _InventarioScreenState extends State<InventarioScreen>
                   color: producto.sinStock
                       ? AppTheme.errorColor.withOpacity(0.1)
                       : producto.stockBajo
-                      ? AppTheme.warningColor.withOpacity(0.1)
-                      : AppTheme.successColor.withOpacity(0.1),
+                          ? AppTheme.warningColor.withOpacity(0.1)
+                          : AppTheme.successColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -215,8 +336,8 @@ class _InventarioScreenState extends State<InventarioScreen>
                         color: producto.sinStock
                             ? AppTheme.errorColor
                             : producto.stockBajo
-                            ? AppTheme.warningColor
-                            : AppTheme.successColor,
+                                ? AppTheme.warningColor
+                                : AppTheme.successColor,
                       ),
                     ),
                     Text(

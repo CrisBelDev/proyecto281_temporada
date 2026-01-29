@@ -150,11 +150,11 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                     padding: const EdgeInsets.all(16),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 0.75,
-                        ),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.75,
+                    ),
                     itemCount: _productosFiltrados.length,
                     itemBuilder: (context, index) {
                       final producto = _productosFiltrados[index];
@@ -196,7 +196,8 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                                     ),
                                     const SizedBox(height: 4),
                                     Text(
-                                      currencyFormat.format(producto.precio),
+                                      currencyFormat
+                                          .format(producto.precioVenta),
                                       style: TextStyle(
                                         color: AppTheme.primaryColor,
                                         fontSize: 16,
@@ -212,8 +213,8 @@ class _CatalogoScreenState extends State<CatalogoScreen> {
                                           color: producto.sinStock
                                               ? AppTheme.errorColor
                                               : producto.stockBajo
-                                              ? AppTheme.warningColor
-                                              : AppTheme.successColor,
+                                                  ? AppTheme.warningColor
+                                                  : AppTheme.successColor,
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
@@ -274,7 +275,7 @@ class _CantidadDialogState extends State<_CantidadDialog> {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Precio: ${currencyFormat.format(widget.producto.precio)}'),
+          Text('Precio: ${currencyFormat.format(widget.producto.precioVenta)}'),
           Text('Stock disponible: ${widget.producto.stock}'),
           const SizedBox(height: 16),
           Row(
@@ -282,9 +283,8 @@ class _CantidadDialogState extends State<_CantidadDialog> {
             children: [
               IconButton(
                 icon: const Icon(Icons.remove_circle),
-                onPressed: _cantidad > 1
-                    ? () => setState(() => _cantidad--)
-                    : null,
+                onPressed:
+                    _cantidad > 1 ? () => setState(() => _cantidad--) : null,
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -313,7 +313,7 @@ class _CantidadDialogState extends State<_CantidadDialog> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Total: ${currencyFormat.format(widget.producto.precio * _cantidad)}',
+            'Total: ${currencyFormat.format(widget.producto.precioVenta * _cantidad)}',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ],

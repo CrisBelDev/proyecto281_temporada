@@ -30,9 +30,8 @@ class VentasProvider with ChangeNotifier {
       final data = ApiService.parseResponse(response);
 
       if (data['success'] == true) {
-        _ventas = (data['ventas'] as List)
-            .map((v) => Venta.fromJson(v))
-            .toList();
+        _ventas =
+            (data['ventas'] as List).map((v) => Venta.fromJson(v)).toList();
       }
     } catch (e) {
       _error = e.toString();
@@ -106,7 +105,7 @@ class VentasProvider with ChangeNotifier {
             (item) => {
               'id_producto': item.producto.id,
               'cantidad': item.cantidad,
-              'precio_unitario': item.producto.precio,
+              'precio_unitario': item.producto.precioVenta,
             },
           )
           .toList();
@@ -142,5 +141,5 @@ class ItemCarrito {
 
   ItemCarrito({required this.producto, required this.cantidad});
 
-  double get subtotal => producto.precio * cantidad;
+  double get subtotal => producto.precioVenta * cantidad;
 }
