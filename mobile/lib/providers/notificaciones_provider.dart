@@ -27,7 +27,7 @@ class NotificacionesProvider with ChangeNotifier {
       final data = ApiService.parseResponse(response);
 
       if (data['success'] == true) {
-        _notificaciones = (data['notificaciones'] as List)
+        _notificaciones = (data['data'] as List)
             .map((n) => Notificacion.fromJson(n))
             .toList();
       }
